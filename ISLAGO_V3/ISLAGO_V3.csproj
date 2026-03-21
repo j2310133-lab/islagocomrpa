@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ISLAGO_V3.Entidad\ISLAGO_V3.Entidad.csproj" />
+    <ProjectReference Include="..\ISLAGO_V3.IoC\ISLAGO_V3.IoC.csproj" />
+    <ProjectReference Include="..\ISLAGO_V3.Negocio\ISLAGO_V3.Negocio.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\img\articulos-img\" />
+    <Folder Include="wwwroot\img\usuarios-img\" />
+    <Folder Include="wwwroot\ISLagoIMG\" />
+  </ItemGroup>
+
+</Project>
