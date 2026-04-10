@@ -19,9 +19,13 @@ public partial class Proforma
 
     public int? Idusuario { get; set; }
 
+    public int? Idimagen { get; set; }
+
     public virtual ICollection<DetalleProforma> DetalleProformas { get; set; } = new List<DetalleProforma>();
 
     public virtual Persona? IdclienteNavigation { get; set; }
+
+    public virtual Imagen? IdimagenNavigation { get; set; }
 
     public virtual Usuario? IdusuarioNavigation { get; set; }
 }

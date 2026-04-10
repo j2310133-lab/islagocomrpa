@@ -17,15 +17,17 @@ public partial class Articulo
 
     public int? Idumedida { get; set; }
 
-    public string? Imagen { get; set; }
-
     public bool? Activo { get; set; }
+
+    public virtual ICollection<Articulocategorium> Articulocategoria { get; set; } = new List<Articulocategorium>();
+
+    public virtual ICollection<Articuloimagen> Articuloimagens { get; set; } = new List<Articuloimagen>();
 
     public virtual ICollection<Descuento> Descuentos { get; set; } = new List<Descuento>();
 
     public virtual ICollection<DetalleCompra> DetalleCompras { get; set; } = new List<DetalleCompra>();
 
-    public virtual ICollection<DetalleFactura> DetalleFacturas { get; set; } = new List<DetalleFactura>();
+    public virtual ICollection<DetalleFactura> DetalleFacturas { get; set; }    = new List<DetalleFactura>();
 
     public virtual ICollection<DetallePedido> DetallePedidos { get; set; } = new List<DetallePedido>();
 

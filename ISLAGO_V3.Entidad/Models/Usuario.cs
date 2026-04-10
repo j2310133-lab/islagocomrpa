@@ -23,7 +23,11 @@ public partial class Usuario
 
     public int? Idpersona { get; set; }
 
+    public int? Idimagen { get; set; }
+
     public virtual ICollection<Codigo2fa> Codigo2fas { get; set; } = new List<Codigo2fa>();
+
+    public virtual Imagen? IdimagenNavigation { get; set; }
 
     public virtual Persona? IdpersonaNavigation { get; set; }
 
@@ -34,6 +38,8 @@ public partial class Usuario
     public virtual ICollection<Proforma> Proformas { get; set; } = new List<Proforma>();
 
     public virtual ICollection<RecuperacionCuentum> RecuperacionCuenta { get; set; } = new List<RecuperacionCuentum>();
+
+    public virtual ICollection<Reporte> Reportes { get; set; } = new List<Reporte>();
 
     public virtual ICollection<SesionUsuario> SesionUsuarios { get; set; } = new List<SesionUsuario>();
 

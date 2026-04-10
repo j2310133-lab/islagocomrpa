@@ -17,8 +17,6 @@ public partial class Pedido
 
     public DateTime? FechaEntrega { get; set; }
 
-    public string? Estado { get; set; }
-
     public string? Prioridad { get; set; }
 
     public decimal? Total { get; set; }
@@ -28,6 +26,8 @@ public partial class Pedido
     public decimal? Deuda { get; set; }
 
     public int? Idusuario { get; set; }
+
+    public int? Idestado { get; set; }
 
     public virtual ICollection<DetallePedido> DetallePedidos { get; set; } = new List<DetallePedido>();
 
@@ -39,7 +39,11 @@ public partial class Pedido
 
     public virtual Persona? IdclienteNavigation { get; set; }
 
+    public virtual Pedido? IdestadoNavigation { get; set; }
+
     public virtual Usuario? IdusuarioNavigation { get; set; }
+
+    public virtual ICollection<Pedido> InverseIdestadoNavigation { get; set; } = new List<Pedido>();
 
     public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 }

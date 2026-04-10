@@ -11,8 +11,4 @@
     <ProjectReference Include="..\ISLAGO_V3.Entidad\ISLAGO_V3.Entidad.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Implementaciones\" />
-  </ItemGroup>
-
 </Project>

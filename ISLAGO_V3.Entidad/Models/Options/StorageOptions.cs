@@ -8,9 +8,9 @@ namespace ISLAGO_V3.Entidad.Models.Options
 {
     public class StorageOptions
     {
-        public Dictionary<string, string> RutaBase { get; set; } = new();
+        public Dictionary<string, string> RutasBase { get; set; } = new();
         public Dictionary<string, string[]> FormatosPermitidos { get; set; } = new();
-        public Dictionary<string, int> TamañosMaximosMB { get; set; } = new();
-        public string PublicBaseURL { get; set; }
+        public Dictionary<string, int> TamañosMaximosMb { get; set; } = new();
+        public string? PublicBaseUrl { get; set; }
     }
 }

@@ -39,9 +39,9 @@ namespace ISLAGO_V3.IoC
             serv.Configure<StorageOptions>(opt =>
             {
                 //URL Base
-                opt.PublicBaseURL = "/ISLagoIMG";
+                opt.PublicBaseUrl = "/ISLagoIMG";
 
-                opt.RutaBase = new Dictionary<string, string>
+                opt.RutasBase = new Dictionary<string, string>
                 {
                     { "imagen-articulo", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\articulos-img\"}
                 };
@@ -51,7 +51,7 @@ namespace ISLAGO_V3.IoC
                     { "imagen-articulo", new [] {"jpg", "jpeg", "svg", "png"} }
                 };
 
-                opt.TamañosMaximosMB = new Dictionary<string, int>
+                opt.TamañosMaximosMb = new Dictionary<string, int>
                 {
                     { "imagen-articulo", 1000 }
                 };

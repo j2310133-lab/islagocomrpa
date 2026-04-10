@@ -11,7 +11,9 @@ public partial class Entrega
 
     public DateTime? FechaReal { get; set; }
 
-    public string? Evidencia { get; set; }
+    public int? IdimagenEvidencia { get; set; }
+
+    public virtual Imagen? IdimagenEvidenciaNavigation { get; set; }
 
     public virtual Pedido? IdpedidoNavigation { get; set; }
 }

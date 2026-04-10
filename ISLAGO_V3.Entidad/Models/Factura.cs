@@ -15,7 +15,11 @@ public partial class Factura
 
     public decimal? Total { get; set; }
 
+    public int? Idimagen { get; set; }
+
     public virtual ICollection<DetalleFactura> DetalleFacturas { get; set; } = new List<DetalleFactura>();
+
+    public virtual Imagen? IdimagenNavigation { get; set; }
 
     public virtual Pedido? IdpedidoNavigation { get; set; }
 }

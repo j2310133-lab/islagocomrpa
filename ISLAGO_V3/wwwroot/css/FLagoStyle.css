@@ -1,0 +1,131 @@
+﻿:root {
+    --green-main: #1f7a63;
+    --green-dark: #145a4a;
+    --green-light: #e8f5f1;
+    --wood: #8b5e34;
+    --bg: #f4f6f9;
+}
+
+/* RESET */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+}
+
+/* LAYOUT */
+.layout {
+    display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 270px;
+    height: 100vh;
+    background: linear-gradient(180deg, var(--green-dark), #0f3f34);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.15);
+}
+
+/* BRAND */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+    .brand img {
+        width: 66px;
+        height: auto;
+        object-fit: contain;
+    }
+
+.brand-text .title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.brand-text small {
+    color: #bbb;
+}
+
+/* MENU */
+.nav-menu {
+    padding: 10px;
+}
+
+    .nav-menu a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        margin-bottom: 6px;
+        color: #ccc;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .nav-menu a.active {
+            background: var(--green-main);
+            color: white;
+        }
+
+/* MAIN */
+.main {
+    flex: 1;
+}
+
+/* TOPBAR */
+.topbar {
+    height: 60px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+}
+
+/* SEARCH */
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #f1f3f5;
+    padding: 6px 12px;
+    border-radius: 20px;
+    gap: 8px;
+}
+
+    .search-box input {
+        border: none;
+        outline: none;
+        background: transparent;
+    }
+
+/* USER */
+.user-box {
+    display: flex;
+    align-items: inherit;
+    gap: 15px;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* CONTENT */
+.content {
+    padding: 25px;
+}

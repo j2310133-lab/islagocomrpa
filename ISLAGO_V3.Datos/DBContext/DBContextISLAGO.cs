@@ -88,7 +88,6 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnName("activo");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
             entity.Property(e => e.Idumedida).HasColumnName("idumedida");
-            entity.Property(e => e.Imagen).HasColumnName("imagen");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .HasColumnName("nombre");
@@ -103,6 +102,67 @@ public partial class DBContextISLAGO : DbContext
             entity.HasOne(d => d.IdumedidaNavigation).WithMany(p => p.Articulos)
                 .HasForeignKey(d => d.Idumedida)
                 .HasConstraintName("articulo_idumedida_fkey");
+        });
+
+        modelBuilder.Entity<Articulocategorium>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("articulocategoria_pkey");
+
+            entity.ToTable("articulocategoria");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Idarticulo).HasColumnName("idarticulo");
+            entity.Property(e => e.Idcategoria).HasColumnName("idcategoria");
+
+            entity.HasOne(d => d.IdarticuloNavigation).WithMany(p => p.Articulocategoria)
+                .HasForeignKey(d => d.Idarticulo)
+                .HasConstraintName("articulocategoria_idarticulo_fkey");
+
+            entity.HasOne(d => d.IdcategoriaNavigation).WithMany(p => p.Articulocategoria)
+                .HasForeignKey(d => d.Idcategoria)
+                .HasConstraintName("articulocategoria_idcategoria_fkey");
+        });
+
+        modelBuilder.Entity<Articuloimagen>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("articuloimagen_pkey");
+
+            entity.ToTable("articuloimagen");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Idarticulo).HasColumnName("idarticulo");
+            entity.Property(e => e.Idimagen).HasColumnName("idimagen");
+
+            entity.HasOne(d => d.IdarticuloNavigation).WithMany(p => p.Articuloimagens)
+                .HasForeignKey(d => d.Idarticulo)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("articuloimagen_idarticulo_fkey");
+
+            entity.HasOne(d => d.IdimagenNavigation).WithMany(p => p.Articuloimagens)
+                .HasForeignKey(d => d.Idimagen)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("articuloimagen_idimagen_fkey");
+        });
+
+        modelBuilder.Entity<Categorium>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("categoria_pkey");
+
+            entity.ToTable("categoria");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+            entity.Property(e => e.Idpadre).HasColumnName("idpadre");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .HasColumnName("nombre");
+
+            entity.HasOne(d => d.IdpadreNavigation).WithMany(p => p.InverseIdpadreNavigation)
+                .HasForeignKey(d => d.Idpadre)
+                .HasConstraintName("categoria_idpadre_fkey");
         });
 
         modelBuilder.Entity<Codigo2fa>(entity =>
@@ -316,15 +376,33 @@ public partial class DBContextISLAGO : DbContext
             entity.ToTable("entrega");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Evidencia).HasColumnName("evidencia");
             entity.Property(e => e.FechaReal)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fecha_real");
+            entity.Property(e => e.IdimagenEvidencia).HasColumnName("idimagen_evidencia");
             entity.Property(e => e.Idpedido).HasColumnName("idpedido");
+
+            entity.HasOne(d => d.IdimagenEvidenciaNavigation).WithMany(p => p.Entregas)
+                .HasForeignKey(d => d.IdimagenEvidencia)
+                .HasConstraintName("fk_entrega_imagen");
 
             entity.HasOne(d => d.IdpedidoNavigation).WithMany(p => p.Entregas)
                 .HasForeignKey(d => d.Idpedido)
                 .HasConstraintName("entrega_idpedido_fkey");
+        });
+
+        modelBuilder.Entity<EstadoPedido>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("estado_pedido_pkey");
+
+            entity.ToTable("estado_pedido");
+
+            entity.HasIndex(e => e.Nombre, "estado_pedido_nombre_key").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(50)
+                .HasColumnName("nombre");
         });
 
         modelBuilder.Entity<Factura>(entity =>
@@ -338,6 +416,7 @@ public partial class DBContextISLAGO : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fecha");
+            entity.Property(e => e.Idimagen).HasColumnName("idimagen");
             entity.Property(e => e.Idpedido).HasColumnName("idpedido");
             entity.Property(e => e.Numero)
                 .HasMaxLength(50)
@@ -345,6 +424,10 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Total)
                 .HasPrecision(10, 2)
                 .HasColumnName("total");
+
+            entity.HasOne(d => d.IdimagenNavigation).WithMany(p => p.Facturas)
+                .HasForeignKey(d => d.Idimagen)
+                .HasConstraintName("fk_factura_imagen");
 
             entity.HasOne(d => d.IdpedidoNavigation).WithMany(p => p.Facturas)
                 .HasForeignKey(d => d.Idpedido)
@@ -363,6 +446,33 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Nombre)
                 .HasMaxLength(50)
                 .HasColumnName("nombre");
+        });
+
+        modelBuilder.Entity<Imagen>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("imagen_pkey");
+
+            entity.ToTable("imagen");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Estado)
+                .HasDefaultValue(true)
+                .HasColumnName("estado");
+            entity.Property(e => e.Fechaeditada)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fechaeditada");
+            entity.Property(e => e.Fechapublicada)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fechapublicada");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(255)
+                .HasColumnName("nombre");
+            entity.Property(e => e.Ruta).HasColumnName("ruta");
+            entity.Property(e => e.Tamaño).HasColumnName("tamaño");
+            entity.Property(e => e.Tipo)
+                .HasMaxLength(50)
+                .HasColumnName("tipo");
         });
 
         modelBuilder.Entity<MovimientoInventario>(entity =>
@@ -457,10 +567,6 @@ public partial class DBContextISLAGO : DbContext
                 .HasPrecision(10, 2)
                 .HasDefaultValueSql("0")
                 .HasColumnName("deuda");
-            entity.Property(e => e.Estado)
-                .HasMaxLength(20)
-                .HasDefaultValueSql("'pendiente'::character varying")
-                .HasColumnName("estado");
             entity.Property(e => e.Fecha)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -469,6 +575,7 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fecha_entrega");
             entity.Property(e => e.Idcliente).HasColumnName("idcliente");
+            entity.Property(e => e.Idestado).HasColumnName("idestado");
             entity.Property(e => e.Idusuario).HasColumnName("idusuario");
             entity.Property(e => e.NombreClienteTemp)
                 .HasMaxLength(100)
@@ -490,6 +597,11 @@ public partial class DBContextISLAGO : DbContext
             entity.HasOne(d => d.IdclienteNavigation).WithMany(p => p.Pedidos)
                 .HasForeignKey(d => d.Idcliente)
                 .HasConstraintName("pedido_idcliente_fkey");
+
+            entity.HasOne(d => d.IdestadoNavigation).WithMany(p => p.InverseIdestadoNavigation)
+                .HasForeignKey(d => d.Idestado)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("pedido_idestado_fkey");
 
             entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Pedidos)
                 .HasForeignKey(d => d.Idusuario)
@@ -535,6 +647,7 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fecha");
             entity.Property(e => e.Idcliente).HasColumnName("idcliente");
+            entity.Property(e => e.Idimagen).HasColumnName("idimagen");
             entity.Property(e => e.Idusuario).HasColumnName("idusuario");
             entity.Property(e => e.NombreClienteTemp)
                 .HasMaxLength(100)
@@ -549,6 +662,10 @@ public partial class DBContextISLAGO : DbContext
             entity.HasOne(d => d.IdclienteNavigation).WithMany(p => p.Proformas)
                 .HasForeignKey(d => d.Idcliente)
                 .HasConstraintName("proforma_idcliente_fkey");
+
+            entity.HasOne(d => d.IdimagenNavigation).WithMany(p => p.Proformas)
+                .HasForeignKey(d => d.Idimagen)
+                .HasConstraintName("fk_proforma_imagen");
 
             entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Proformas)
                 .HasForeignKey(d => d.Idusuario)
@@ -591,6 +708,34 @@ public partial class DBContextISLAGO : DbContext
                 .HasForeignKey(d => d.Idusuario)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("recuperacion_cuenta_idusuario_fkey");
+        });
+
+        modelBuilder.Entity<Reporte>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("reporte_pkey");
+
+            entity.ToTable("reporte");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.FechaActualizado)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fecha_actualizado");
+            entity.Property(e => e.FechaGenerado)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fecha_generado");
+            entity.Property(e => e.Idusuario).HasColumnName("idusuario");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .HasColumnName("nombre");
+            entity.Property(e => e.Ruta).HasColumnName("ruta");
+            entity.Property(e => e.Tipo)
+                .HasMaxLength(20)
+                .HasColumnName("tipo");
+
+            entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Reportes)
+                .HasForeignKey(d => d.Idusuario)
+                .HasConstraintName("reporte_idusuario_fkey");
         });
 
         modelBuilder.Entity<Rol>(entity =>
@@ -682,6 +827,7 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Email)
                 .HasMaxLength(150)
                 .HasColumnName("email");
+            entity.Property(e => e.Idimagen).HasColumnName("idimagen");
             entity.Property(e => e.Idpersona).HasColumnName("idpersona");
             entity.Property(e => e.IntentosFallidos)
                 .HasDefaultValue(0)
@@ -694,6 +840,10 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Usarname)
                 .HasMaxLength(60)
                 .HasColumnName("usarname");
+
+            entity.HasOne(d => d.IdimagenNavigation).WithMany(p => p.Usuarios)
+                .HasForeignKey(d => d.Idimagen)
+                .HasConstraintName("fk_usuario_imagen");
 
             entity.HasOne(d => d.IdpersonaNavigation).WithOne(p => p.Usuario)
                 .HasForeignKey<Usuario>(d => d.Idpersona)
