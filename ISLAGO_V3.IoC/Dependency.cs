@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using ISLAGO_V3.Datos.Interfaces;
 using ISLAGO_V3.Datos.Implementaciones;
 using ISLAGO_V3.Entidad.Models.Options;
+using ISLAGO_V3.Negocio.Interfaces;
+using ISLAGO_V3.Negocio.Implementaciones;
 //using ISLAGO_V3.Negocio.Interfaces;
 //using ISLAGO_V3.Negocio.Implementaciones;
 
@@ -28,8 +30,12 @@ namespace ISLAGO_V3.IoC
             });
 
             //Generic Dependency || General CRUD
+            serv.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             //Others Dependencys
+            serv.AddScoped<IArticuloServices, ArticuloServices>();
+            serv.AddScoped<IBase64IMGSercies, Base64IMGServices>();
+            serv.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // --------------------------------------
             // CONFIGURACIONES (Options Pattern)

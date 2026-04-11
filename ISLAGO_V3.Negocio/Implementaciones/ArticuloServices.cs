@@ -20,6 +20,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
         private readonly IUnitOfWork _uow;
         private readonly IGenericRepository<Imagen> _imgRep;
         private readonly IGenericRepository<MovimientoInventario> _mvinv;
+        private readonly IGenericRepository<Articulocategorium> _artCatRep;
 
         public ArticuloServices(
             IGenericRepository<Articulo> grep,
@@ -27,7 +28,8 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             IBase64IMGSercies imgServ,
             IUnitOfWork uow,
             IGenericRepository<Imagen> imgRep,
-            IGenericRepository<MovimientoInventario> mvinv)
+            IGenericRepository<MovimientoInventario> mvinv,
+            IGenericRepository<Articulocategorium> artCatRep)
         {
             _artRep = grep;
             _AImg = aImg;
@@ -35,6 +37,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             _uow = uow;
             _imgRep = imgRep;
             _mvinv = mvinv;
+            _artCatRep = artCatRep;
         }
 
         private Stream Base64ToStream(string base64)
@@ -175,7 +178,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
         public async Task<bool> Actualizar(int id, Articulo e, List<string>? imagenesBase64)
         {
             
-            using var transaction = _uow.BeginTransactionAsync();
+            using var transaction = await _uow.BeginTransactionAsync();
 
             try
             {
@@ -212,11 +215,12 @@ namespace ISLAGO_V3.Negocio.Implementaciones
 
                 if (!result) throw new Exception("No se puede actualizar el articulo.");
 
+                await transaction.CommitAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                await transaction.Result.RollbackAsync();
+                await transaction.RollbackAsync();
                 throw new Exception($"Error al intentar actualizar el articulo: {ex.Message}", ex);
             }
                         
@@ -257,6 +261,12 @@ namespace ISLAGO_V3.Negocio.Implementaciones
                         Tamaño = (int)(stream.Length / 1024),
                         Fechaeditada = DateTime.UtcNow,
                         Estado = true
+                    });
+
+                    await _AImg.Crear(new Articuloimagen
+                    {
+                        Idarticulo = idArt,
+                        Idimagen = imagen.Id
                     });
 
                 }
@@ -316,6 +326,11 @@ namespace ISLAGO_V3.Negocio.Implementaciones
                     stockNuevo = cantidad;
                 }
 
+                // ACTUALIZAR STOCK
+                articulo.Stock = stockNuevo;
+
+                var actualizado = await _artRep.Editar(articulo);
+
                 // =======================
                 // REGISTRAR MOVIMIENTO
                 // =======================
@@ -340,44 +355,277 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public Task<bool> AsignarCategorias(int idArt, List<int> categoriasId)
+        public async Task<bool> AsignarCategorias(int idArt, List<int> categoriasId)
         {
-            throw new NotImplementedException();
+
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var ar = await _artRep.Obtener(a => a.Id == idArt);
+
+                if(ar == null) throw new Exception("No existe el articulo.");
+
+                if (categoriasId == null || !categoriasId.Any())
+                    throw new Exception("No se proporcionaron categorias para asignar.");
+
+                // ================================
+                // ELIMINAR RELACIONES ACTUALES
+                // ================================
+
+                var RA = await _artCatRep.Consultar();
+
+                var listaEliminar = RA.Where(ac => ac.Idarticulo == idArt).ToList();
+
+                foreach(var rel in listaEliminar)
+                {
+                    await _artCatRep.Eliminar(rel);
+                }
+
+                // =========================
+                // Insertar nuevas
+                // =========================
+
+                foreach(var catID in categoriasId.Distinct())
+                {
+                    await _artCatRep.Crear(new Articulocategorium
+                    {
+                        Idarticulo = idArt,
+                        Idcategoria = catID
+                    });
+                }
+
+                await t.CommitAsync();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al intentar asignar las categorias: {ex.Message}", ex);
+            }
+
         }
 
-        public Task<List<Articulo>> Buscar(string filtro)
+        public async Task<Articulo> ObtenerPorId(int id)
         {
-            throw new NotImplementedException();
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var articulo = await _artRep.Obtener(a => a.Id == id);
+
+                if (articulo == null) throw new Exception("No existe el articulo.");
+
+                // =================
+                // CARGAR IMAGENES
+                // =================
+
+                var relImgs = (await _AImg.Consultar(ai => ai.Idarticulo == id)).ToList();
+
+                var img = new List<Imagen>();
+
+                foreach(var rel in relImgs)
+                {
+                    var i = await _imgRep.Obtener(im => im.Id == rel.Idimagen);
+                    if (i != null) img.Add(i);
+                }
+
+                articulo.Articuloimagens = relImgs;
+
+                // ======================
+                // CARGAR CATEGORIAS
+                // ======================
+                var relCats = (await _artCatRep.Consultar(ac => ac.Idarticulo == id)).ToList();
+
+                articulo.Articulocategoria = relCats;
+
+                await t.CommitAsync();
+                return articulo;
+
+            }
+            catch (Exception ex)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al intentar obtener el articulo: {ex.Message}", ex);
+            }
         }
 
-        public Task<bool> CambiarEstado(int id, bool activo)
+        public async Task<bool> CambiarEstado(int id, bool activo)
         {
-            throw new NotImplementedException();
+            using var transaction = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var articulo = await _artRep.Obtener(a => a.Id == id);
+
+                if (articulo == null) throw new Exception("No existe el articulo.");
+
+                articulo.Activo = activo;
+
+                var result = await _artRep.Editar(articulo);    
+
+                if (!result) throw new Exception("No se puede cambiar el estado del articulo.");
+
+                await transaction.CommitAsync();
+                return true;
+
+            }
+            catch(Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw new Exception($"Error al intentar cambiar el estado. {ex.Message}", ex);
+            }
         }
 
-        public Task<bool> Eliminar(int id)
+        public async Task<List<Articulo>> Buscar(string filtro)
         {
-            throw new NotImplementedException();
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(filtro)) return new List<Articulo>();
+
+                filtro = filtro.ToLower().Trim();
+
+                var lista = await _artRep.Consultar();
+
+                await t.CommitAsync();
+
+                return lista.Where(a => a.Nombre.ToLower().Contains(filtro) ||
+                    (a.Descripcion != null && a.Descripcion.ToLower().Contains(filtro))
+                ).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al intentar buscar los articulos: {ex.Message}", ex);
+            }
         }
 
-        public Task<List<Articulo>> ObtenerActivos()
+        public async Task<List<Articulo>> ObtenerActivos()
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var lista = await _artRep.Consultar(a => a.Activo == true);
+                return lista.ToList();
+
+            }
+            catch(Exception ex)
+            {
+                throw new Exception($"Error al intentar listar activos: {ex.Message}", ex);
+            }
         }
 
-        public Task<Articulo> ObtenerPorId(int id)
+        public async Task<List<Articulo>> ObtenerPorNombre(string nombre)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                if(string.IsNullOrWhiteSpace(nombre)) return new List<Articulo>();
+
+                nombre = nombre.ToLower().Trim();
+
+                var lista = await _artRep.Consultar(a => a.Nombre.ToLower().Contains(nombre));
+
+                return lista.ToList();
+
+            }
+            catch(Exception ex)
+            {
+                throw new Exception($"Error al intentar obtener por nombre: {ex.Message}", ex);
+            }
         }
 
-        public Task<List<Articulo>> ObtenerPorNombre(string nombre)
+        public async Task<List<Articulo>> ObtenerTodos()
         {
-            throw new NotImplementedException();
+
+            try
+            {
+
+                var lista = await _artRep.Consultar();
+                return lista.ToList();
+
+            }
+            catch(Exception ex)
+            {
+                throw new Exception($"Error al intentar obtener todos los articulos: {ex.Message}", ex);
+            }
+
         }
 
-        public Task<List<Articulo>> ObtenerTodos()
+        public async Task<bool> Eliminar(int id)
         {
-            throw new NotImplementedException();
+
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var articulo = await _artRep.Obtener(a => a.Id == id);
+                if (articulo == null) throw new Exception("No existe el articulo o no fue encontrado.");
+
+                // ======================================
+                // VALIDAR INVENTARIO
+                // ======================================
+
+                var movimientos = await _mvinv.Consultar(m => m.Idarticulo == id);
+                if(movimientos.Any()) throw new Exception("No se puede eliminar el articulo porque tiene movimientos de inventario registrados.");
+
+                // ======================================
+                // ELIMINAR RELACIONES DE IMAGENES
+                // ======================================
+
+                var relImgs = (await _AImg.Consultar(ai => ai.Idarticulo == id)).ToList();
+                foreach (var rel in relImgs)
+                {
+                    await _AImg.Eliminar(rel);
+
+                    // eliminar imagen
+                    var img = await _imgRep.Obtener(im => im.Id == rel.Idimagen);
+                    if (img != null)
+                    {
+                        // eliminar archivo fisico
+                        await _imgServ.EliminarStorage("imagen-articulo", img.Ruta);
+
+                        // eliminar registro de imagen en base de datos
+                        await _imgRep.Eliminar(img);
+                    }
+                }
+
+                // =======================================
+                // ELIMINAR RELACIONES CATEGORIA
+                // =======================================
+
+                var relCats = (await _artCatRep.Consultar(ac => ac.Idarticulo == id)).ToList();
+
+                foreach(var relCat in relCats) await _artCatRep.Eliminar(relCat);
+
+                // =======================================
+                // ELIMINAR ARTICULO
+                // =======================================
+
+                var result = await _artRep.Eliminar(articulo);
+
+                if (!result)  throw new Exception("No se puede eliminar el articulo.");
+
+                await t.CommitAsync();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al intentar eliminar el articulo: {ex.Message}", ex);
+            }
+
         }
+
     }
 }
