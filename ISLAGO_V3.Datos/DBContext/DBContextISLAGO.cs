@@ -18,6 +18,12 @@ public partial class DBContextISLAGO : DbContext
 
     public virtual DbSet<Articulo> Articulos { get; set; }
 
+    public virtual DbSet<Articulocategorium> Articulocategoria { get; set; }
+
+    public virtual DbSet<Articuloimagen> Articuloimagens { get; set; }
+
+    public virtual DbSet<Categorium> Categoria { get; set; }
+
     public virtual DbSet<Codigo2fa> Codigo2fas { get; set; }
 
     public virtual DbSet<Compra> Compras { get; set; }
@@ -36,9 +42,13 @@ public partial class DBContextISLAGO : DbContext
 
     public virtual DbSet<Entrega> Entregas { get; set; }
 
+    public virtual DbSet<EstadoPedido> EstadoPedidos { get; set; }
+
     public virtual DbSet<Factura> Facturas { get; set; }
 
     public virtual DbSet<FormaPago> FormaPagos { get; set; }
+
+    public virtual DbSet<Imagen> Imagens { get; set; }
 
     public virtual DbSet<MovimientoInventario> MovimientoInventarios { get; set; }
 
@@ -55,6 +65,8 @@ public partial class DBContextISLAGO : DbContext
     public virtual DbSet<Proveedor> Proveedors { get; set; }
 
     public virtual DbSet<RecuperacionCuentum> RecuperacionCuenta { get; set; }
+
+    public virtual DbSet<Reporte> Reportes { get; set; }
 
     public virtual DbSet<Rol> Rols { get; set; }
 

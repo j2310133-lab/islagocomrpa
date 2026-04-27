@@ -1,5 +1,158 @@
 ﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+    This is the view of Articulos   
 *@
 @{
+    ViewData["Title"] = "Articulos";
+}
+
+@section Estilos {
+    <link rel="stylesheet" href="~/css/articulo.css" asp-append-version="true" />
+}
+
+<div class="articulo-container">
+
+    <!-- HEADER -->
+    <div class="articulo-header">
+        <h3>Gestión de Artículos</h3>
+
+        <button class="btn btn-success" data-toggle="modal" data-target="#modalArticulo">
+            <i class="fas fa-plus"></i> Nuevo Artículo
+        </button>
+    </div>
+
+    <!-- GRID -->
+    <div class="table-responsive">
+        <table class="table table-hover articulo-table">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <!-- MOCK DATA -->
+                <tr>
+                    <td>
+                        <img src="https://via.placeholder.com/50" class="img-thumb">
+                    </td>
+                    <td>Producto Demo</td>
+                    <td>$10</td>
+                    <td>20</td>
+                    <td><span class="badge badge-success">Activo</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- MODAL -->
+<!-- ========================= -->
+<!-- ========================= -->
+<!-- MODAL -->
+<!-- ========================= -->
+
+<div class="modal fade" id="modalArticulo">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header">
+                <h5>Nuevo Artículo</h5>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <div class="row">
+
+                    <!-- LEFT -->
+                    <div class="col-md-6">
+
+                        <label>Nombre</label>
+                        <input id="nombre" class="form-control mb-3">
+
+                        <label>Descripción</label>
+                        <textarea id="descripcion" class="form-control mb-3"></textarea>
+
+                        <div class="row">
+                            <div class="col">
+                                <label>Precio</label>
+                                <input id="precio" type="number" class="form-control">
+                            </div>
+                            <div class="col">
+                                <label>Stock</label>
+                                <input id="stock" type="number" class="form-control">
+                            </div>
+                        </div>
+
+                        <label class="mt-3">Estado</label>
+                        <select id="activo" class="form-control">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="col-md-6">
+
+                        <!-- IMÁGENES -->
+                        <label>Imágenes</label>
+
+                        <div class="upload-box">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Arrastra o selecciona imágenes</p>
+                            <input id="inputImagenes" type="file" multiple>
+                        </div>
+
+                        <div class="preview-container" id="preview"></div>
+
+                        <!-- CATEGORÍAS -->
+                        <label class="mt-3">Categorías</label>
+
+                        <select id="categoriaSelect" class="form-control mb-2">
+                            <option value="">-- Seleccionar categoría --</option>
+                            <option value="1">Electrónica</option>
+                            <option value="2">Hogar</option>
+                            <option value="3">Oficina</option>
+                        </select>
+
+                        <div id="categoriasSeleccionadas" class="categoria-box"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button id="btnGuardar" class="btn btn-primary">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/articulo.js" asp-append-version="true"></script>
 }
