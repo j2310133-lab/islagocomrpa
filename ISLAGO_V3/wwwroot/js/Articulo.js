@@ -26,3 +26,35 @@ document.getElementById("categoriaSelect").addEventListener("change", function (
 
     this.value = "";
 });
+
+// ===================================
+// Funcionalidad del proyecto
+// ===================================
+document.addEventListener("DOMContentLoaded", () => {
+    listarArticulos();
+});
+
+// ===================================
+// LISTAR TABLA ARTICULO
+// Y MOSTRAR LA ULTIMA IMAGEN
+// PUBLICADA
+// ===================================
+
+async function listarArticulos() {
+    try {
+
+        const res = await fetch("/Articulo/Listar");
+        const data = await res.json();
+
+        const tbody = document.getElementById("tablaArticulos");
+        tbody.innerHTML = "";
+
+        data.foreach(a => {
+
+        })
+
+    }
+    catch (error) {
+        console.error("Error al listar :", error);
+    }
+}

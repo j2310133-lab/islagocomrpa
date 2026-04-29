@@ -1,6 +1,13 @@
+using ISLAGO_V3.IoC;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllersWithViews();
+
+//Inyectar dependencia
+builder.Services.InyectarDependencias(builder.Configuration);
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
