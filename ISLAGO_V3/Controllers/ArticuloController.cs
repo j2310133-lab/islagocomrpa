@@ -12,15 +12,18 @@ namespace ISLAGO_V3.Controllers
         private readonly DBContextISLAGO _context;
         private readonly IWebHostEnvironment _env;
         private readonly IArticuloServices _arServ;
+        private readonly IBase64IMGSercies _imgServ;
 
         public ArticuloController(
             DBContextISLAGO c,
             IWebHostEnvironment env,
-            IArticuloServices arServ)
+            IArticuloServices arServ,
+            IBase64IMGSercies imgServ)
         {
             _context = c;
             _env = env;
             _arServ = arServ;
+            _imgServ = imgServ;
         }
 
         public IActionResult Index()
@@ -39,30 +42,83 @@ namespace ISLAGO_V3.Controllers
             {
 
                 var lista = await _context.Articulos
-                    .Select(a => new ArticuloVM
+                    .Select(a => new
                     {
-                        Id = a.Id,
-                        Nombre = a.Nombre,
-                        Precio = a.Precio,
-                        Stock = a.Stock,
-                        Activo = a.Activo,
+                        a.Id,
+                        a.Nombre,
+                        a.Descripcion,
+                        a.Precio,
+                        a.Stock,
+                        Umedidum = a.IdumedidaNavigation.Nombre,
+                        a.Activo,
 
-                        ImagenesUrl = _context.Articuloimagens
+                        Imagen = _context.Articuloimagens
                             .Where(ai => ai.Idarticulo == a.Id)
                             .Join(_context.Imagens,
                                 ai => ai.Idimagen,
                                 im => im.Id,
-                                (ai, im) => new { im.Ruta, im.Fechapublicada })
+                                (ai, im) => new { im.Nombre, im.Fechapublicada })
                             .OrderByDescending(x => x.Fechapublicada)
-                            .Select(x => x.Ruta)
-                            .FirstOrDefault(),
+                            .FirstOrDefault()
 
-                        TotalImagenes = _context.Articuloimagens
-                            .Count(ai => ai.Idarticulo == a.Id)
                     })
                     .ToListAsync();
 
-                return Ok(lista);
+                var resultado = new List<Object>();
+
+                foreach (var a in lista)
+                {
+                    string? base64 = null;
+
+                    // ====================================
+                    // String a Base64(imagen)
+                    // ====================================
+                    if(a.Imagen != null)
+                    {
+                        try
+                        {
+
+                            var base64Raw = await _imgServ
+                                .ConvertToBase64String("imagen-articulo", a.Imagen.Nombre);
+
+                            string ext = Path.GetExtension(a.Imagen.Nombre).Replace(".", "");
+
+                            base64 = $"data:image/{ext};base64,{base64Raw}";
+
+                        }
+                        catch
+                        {
+                            base64 = null;
+                        }
+                    }
+
+                    // ==========================
+                    // Acortamos descripción
+                    // ==========================
+                    string descripcioncorta = "";
+
+                    if (!string.IsNullOrEmpty(a.Descripcion))
+                    {
+                        descripcioncorta = a.Descripcion.Length > 60
+                            ? a.Descripcion.Substring(0, 60) + "..."
+                            : a.Descripcion;
+                    }
+
+                    resultado.Add(new
+                    {
+                        a.Id,
+                        a.Nombre,
+                        DescripcionCorta = descripcioncorta,
+                        DescripcionCompleta = a.Descripcion,
+                        a.Precio,
+                        a.Stock,
+                        a.Activo,
+                        Umedidum = a.Umedidum,
+                        Imagen = base64
+                    });
+                }
+
+                return Ok(resultado);
 
             }
             catch (Exception ex)

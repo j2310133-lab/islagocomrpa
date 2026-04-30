@@ -49,8 +49,23 @@ async function listarArticulos() {
         const tbody = document.getElementById("tablaArticulos");
         tbody.innerHTML = "";
 
-        data.foreach(a => {
+        data.forEach(a => {
+            const tr = document.createElement("tr");
 
+            tr.innerHTML = `
+                <td>
+                    ${a.imagen
+                    ? `<img src="${a.imagen}" class="img-table">`
+                    : `<span>Sin Imagen</span>`
+                    }
+                </td>
+
+                <td> ${a.nombre} </td>
+
+                <td>
+                    ${a.descripcionCorta || ""}
+                    $
+            `
         })
 
     }
