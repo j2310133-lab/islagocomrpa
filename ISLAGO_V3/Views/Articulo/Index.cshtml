@@ -103,7 +103,7 @@
                         <div class="upload-box">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Arrastra o selecciona imágenes</p>
-                            <input id="inputImagenes" type="file" multiple>
+                            <input id="inputImagenes" type="file" multiple accept="image/*">
                         </div>
 
                         <div class="preview-container" id="preview"></div>
@@ -113,9 +113,12 @@
 
                         <select id="categoriaSelect" class="form-control mb-2">
                             <option value="">-- Seleccionar categoría --</option>
-                            <option value="1">Electrónica</option>
-                            <option value="2">Hogar</option>
-                            <option value="3">Oficina</option>
+                        </select>
+
+                        <label class="mt-3">Unidad de Medida</label>
+
+                        <select id="unidadMedida" class="form-control">
+                            <option value="">-- Seleccionar unidad --</option>
                         </select>
 
                         <div id="categoriasSeleccionadas" class="categoria-box"></div>

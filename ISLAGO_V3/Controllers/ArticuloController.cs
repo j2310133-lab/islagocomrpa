@@ -113,7 +113,7 @@ namespace ISLAGO_V3.Controllers
                         a.Precio,
                         a.Stock,
                         a.Activo,
-                        Umedidum = a.Umedidum,
+                        a.Umedidum,
                         Imagen = base64
                     });
                 }
@@ -126,6 +126,37 @@ namespace ISLAGO_V3.Controllers
                 throw new Exception($"Error al intentar listar la tabla articulo, tipo de error: {ex.Message}");
             }
             
+        }
+
+        // ===========================================
+        // EndPoints de categoria y unidad medida
+        // ===========================================
+        [HttpGet]
+        public async Task<IActionResult> ObtenerCategorias()
+        {
+            var lista = await _context.Categoria
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Nombre
+                })
+                .ToListAsync();
+
+            return Ok(lista);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerUnidadesMedida()
+        {
+            var lista = await _context.Umedida
+                .Select(u => new
+                {
+                    u.Id,
+                    u.Nombre
+                })
+                .ToListAsync();
+
+            return Ok(lista);
         }
 
         // =================
