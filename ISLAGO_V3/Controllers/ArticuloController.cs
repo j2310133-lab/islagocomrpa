@@ -37,11 +37,10 @@ namespace ISLAGO_V3.Controllers
         [HttpGet]
         public async Task<IActionResult> Listar()
         {
-
             try
             {
-
                 var lista = await _context.Articulos
+                    .Where(a => a.Activo == true)
                     .Select(a => new
                     {
                         a.Id,
@@ -59,73 +58,39 @@ namespace ISLAGO_V3.Controllers
                                 im => im.Id,
                                 (ai, im) => new { im.Nombre, im.Fechapublicada })
                             .OrderByDescending(x => x.Fechapublicada)
+                            .Select(x => x.Nombre)
                             .FirstOrDefault()
-
                     })
                     .ToListAsync();
 
-                var resultado = new List<Object>();
-
-                foreach (var a in lista)
+                var resultado = lista.Select(a => new
                 {
-                    string? base64 = null;
-
-                    // ====================================
-                    // String a Base64(imagen)
-                    // ====================================
-                    if(a.Imagen != null)
-                    {
-                        try
-                        {
-
-                            var base64Raw = await _imgServ
-                                .ConvertToBase64String("imagen-articulo", a.Imagen.Nombre);
-
-                            string ext = Path.GetExtension(a.Imagen.Nombre).Replace(".", "");
-
-                            base64 = $"data:image/{ext};base64,{base64Raw}";
-
-                        }
-                        catch
-                        {
-                            base64 = null;
-                        }
-                    }
-
-                    // ==========================
-                    // Acortamos descripción
-                    // ==========================
-                    string descripcioncorta = "";
-
-                    if (!string.IsNullOrEmpty(a.Descripcion))
-                    {
-                        descripcioncorta = a.Descripcion.Length > 60
+                    a.Id,
+                    a.Nombre,
+                    DescripcionCorta = string.IsNullOrEmpty(a.Descripcion)
+                        ? ""
+                        : (a.Descripcion.Length > 60
                             ? a.Descripcion.Substring(0, 60) + "..."
-                            : a.Descripcion;
-                    }
+                            : a.Descripcion),
 
-                    resultado.Add(new
-                    {
-                        a.Id,
-                        a.Nombre,
-                        DescripcionCorta = descripcioncorta,
-                        DescripcionCompleta = a.Descripcion,
-                        a.Precio,
-                        a.Stock,
-                        a.Activo,
-                        a.Umedidum,
-                        Imagen = base64
-                    });
-                }
+                    DescripcionCompleta = a.Descripcion,
+                    a.Precio,
+                    a.Stock,
+                    a.Activo,
+                    a.Umedidum,
+
+                    // traer imagen desde base de datos
+                    Imagen = a.Imagen != null
+                        ? $"/img/articulos/{a.Imagen}"
+                        : null
+                });
 
                 return Ok(resultado);
-
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al intentar listar la tabla articulo, tipo de error: {ex.Message}");
+                return BadRequest(ex.Message);
             }
-            
         }
 
         // ===========================================

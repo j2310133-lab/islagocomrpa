@@ -42,60 +42,38 @@ document.addEventListener("DOMContentLoaded", () => {
 // PUBLICADA
 // ===================================
 
+let listaArticulos = [];
+
 async function listarArticulos() {
     try {
 
         const res = await fetch("/Articulo/Listar");
         const data = await res.json();
 
-        const tbody = document.getElementById("tablaArticulos");
-        tbody.innerHTML = "";
+        listaArticulos = data;
 
-        data.forEach(a => {
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-                <td>
-                    ${a.Imagen
-                        ? `<img src="${a.Imagen}" class="img-table">`
-                        : `<span>Sin Imagen</span>`
-                    }
-                </td>
-
-                <td>${a.nombre}</td>
-
-                <td>
-                    ${a.descripcionCorta || ""}
-                    ${
-                        a.descripcionCompleta && a.descripcionCompleta.length > 60
-                        ? `<button class="btn-ver-mas" onclick="verDescripcion('${a.descripcionCompleta.replace(/'/g, "\\'")}')">Ver más</button>`
-                        : ""
-                    }
-                </td>
-
-                <td>$${a.precio}</td>
-                <td>${a.stock}</td>
-                <td>${a.umedidum}</td>
-
-                <td>
-                    <span class="${a.activo ? 'badge badge-success' : 'badge badge-danger'}">
-                        ${a.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                </td>
-
-                <td>
-                    <button class="btn btn-sm btn-primary">Editar</button>
-                    <button class="btn btn-sm btn-danger">Eliminar</button>
-                </td>
-            `;
-
-            tbody.appendChild(tr);
-        });
+        renderArticulos(data);
 
     }
     catch (error) {
-        console.error("Error al listar :", error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || "Algo salió mal"
+        });
+
     }
+}
+
+// Ver descripcion
+function verDescripcion(desc) {
+    Swal.fire({
+        title: 'Descripción completa',
+        html: `<div style="text-align:left">${desc}</div>`,
+        width: 600,
+        confirmButtonText: 'Cerrar'
+    });
 }
 
 // Cargar categorias en MODAL
@@ -127,6 +105,94 @@ async function cargarUmedidas() {
         select.appendChild(option);
     });
 }
+
+// ===================================
+// BUSCADOR
+// ===================================
+
+//Creamos render antes de buscar para listar mientras se busca el articulo.
+function renderArticulos(data) {
+    const tbody = document.getElementById("tablaArticulos");
+    tbody.innerHTML = "";
+
+    // Mensaje por si no hay resultado.
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted">
+                    <div style="padding:20px;">
+                        <i class="fas fa-search" style="font-size:20px; opacity:0.6;"></i>
+                        <p style="margin-top:10px;">
+                            No se encontraron artículos con ese criterio
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    data.forEach(a => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>
+                ${a.imagen
+                ? `<img src="${a.imagen}" class="img-table">`
+                : `<span>Sin Imagen</span>`}
+            </td>
+
+            <td>${a.nombre}</td>
+
+            <td>
+                ${a.descripcionCorta || ""}
+                ${a.descripcionCompleta && a.descripcionCompleta.length > 60
+                ? `<button class="btn btn-sm btn-info ms-2" onclick="verDescripcion('${a.descripcionCompleta.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-eye"></i>
+                   </button>`
+                : ""}
+            </td>
+
+            <td>C$ ${a.precio}</td>
+            <td>${a.stock}</td>
+            <td>${a.umedidum}</td>
+
+            <td>
+                <span class="badge ${a.activo ? 'bg-success' : 'bg-danger'}">
+                    ${a.activo ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+
+            <td>
+                <button class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+// Creamos funcion de buscar
+document.getElementById("buscadorArticulos").addEventListener("input", function () {
+    const filtro = this.value.toLowerCase().trim();
+
+    if (!filtro) {
+        renderArticulos(listaArticulos);
+        return;
+    }
+
+    const filtrados = listaArticulos.filter(a =>
+        (a.nombre && a.nombre.toLowerCase().includes(filtro)) ||
+        (a.descripcionCompleta && a.descripcionCompleta.toLowerCase().includes(filtro))
+    );
+
+    renderArticulos(filtrados);
+});
 
 // =================================================
 // Capturamos Imagenes y convertirla a string
@@ -188,7 +254,21 @@ document.getElementById("btnGuardar").addEventListener("click", async function (
 
         const result = await res.json();
 
-        alert(result.message);
+        if (!res.ok) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Error al guardar.',
+            });
+        }
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Se ha guardado con exito el articulo',
+            timer: 2000,
+            showConfirmButton: false
+        });
 
         //cerrar modal
         $("#modalArticulo").modal("hide");
@@ -198,7 +278,11 @@ document.getElementById("btnGuardar").addEventListener("click", async function (
 
     }
     catch(error) {
-        console.error("Error al crear:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al tratar de guardar revise bien los campos o comente con soporte.'
+        });
     }
 
 });
