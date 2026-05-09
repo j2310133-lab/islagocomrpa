@@ -241,5 +241,38 @@ namespace ISLAGO_V3.Controllers
             }
         }
 
+        // =======================
+        // CAMBIAR ESTADO
+        // =======================
+        [HttpPut]
+        public async Task<IActionResult> CambiarEstado(int id, bool activo)
+        {
+            try
+            {
+                var result = await _arServ.CambiarEstado(id, activo);
+
+                if (!result)
+                    return BadRequest(new
+                    {
+                        message = "No se pudo cambiar el estado del artículo."
+                    });
+
+                return Ok(new
+                {
+                    message = activo
+                        ? "Artículo activado correctamente."
+                        : "Artículo inhabilitado correctamente."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
     }
 }
+

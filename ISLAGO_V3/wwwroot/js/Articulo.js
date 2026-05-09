@@ -111,7 +111,7 @@ async function cargarUmedidas() {
 // ===================================
 
 //Creamos render antes de buscar para listar mientras se busca el articulo.
-function renderArticulos(data) {
+async function renderArticulos(data) {
     const tbody = document.getElementById("tablaArticulos");
     tbody.innerHTML = "";
 
@@ -164,13 +164,24 @@ function renderArticulos(data) {
             </td>
 
             <td>
-                <button class="btn btn-sm btn-primary">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-danger">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
+
+            <button
+                class="btn btn-sm btn-primary"
+                onclick="editarArticulo(${a.id})">
+
+                <i class="fas fa-edit"></i>
+
+            </button>
+
+            <button
+                class="btn btn-sm btn-danger"
+                onclick="cambiarEstado(${a.id}, ${a.activo})">
+
+                <i class="fas fa-trash"></i>
+
+            </button>
+
+        </td>
         `;
 
         tbody.appendChild(tr);
@@ -286,3 +297,90 @@ document.getElementById("btnGuardar").addEventListener("click", async function (
     }
 
 });
+
+// ==========================
+// EDITAR
+// ==========================
+//function editarArticulo(id) {
+
+//    const articulo = listaArticulos.find(a => a.id == id);
+
+//    if (!articulo) return;
+
+//    // Abrir modal
+//    $("#modalArticulo").modal("show");
+
+//    // Llenar campos
+//    document.getElementById("nombre").value = articulo.nombre;
+//    document.getElementById("descripcion").value = articulo.descripcionCompleta;
+//    document.getElementById("precio").value = articulo.precio;
+//    document.getElementById("stock").value = articulo.stock;
+//    document.getElementById("activo").value = articulo.activo.toString();
+//    document.getElementById("imagen").value = articulo.imagen;
+//}
+
+async function cambiarEstado(id, activoActual) {
+
+    const nuevoEstado = !activoActual;
+
+    const confirmacion = await Swal.fire({
+        title: nuevoEstado ? 'Restaurar artículo' : 'Eliminar artículo',
+
+        text: nuevoEstado
+            ? '¿Deseas restaurar este artículo?'
+            : '¿Deseas eliminar este artículo?',
+
+        icon: 'warning',
+        showCancelButton: true,
+
+        confirmButtonText: nuevoEstado
+            ? 'Sí, restaurar'
+            : 'Sí, eliminar',
+
+        cancelButtonText: 'Cancelar',
+
+        confirmButtonColor: nuevoEstado
+            ? '#28a745'
+            : '#d33'
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+
+        const res = await fetch(`/Articulo/CambiarEstado?id=${id}&activo=${nuevoEstado}`, {
+            method: 'PUT'
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            throw new Error(result.message);
+        }
+
+        await Swal.fire({
+            icon: 'success',
+
+            title: 'Éxito',
+
+            text: nuevoEstado
+                ? 'Artículo restaurado correctamente'
+                : 'Artículo eliminado correctamente',
+
+            timer: 1800,
+            showConfirmButton: false
+        });
+
+        listarArticulos();
+
+    }
+    catch (error) {
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message
+        });
+
+    }
+}
