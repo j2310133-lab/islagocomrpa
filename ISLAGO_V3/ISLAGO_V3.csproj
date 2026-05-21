@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\ISLagoIMG\**" />
+    <Content Remove="wwwroot\ISLagoIMG\**" />
+    <EmbeddedResource Remove="wwwroot\ISLagoIMG\**" />
+    <None Remove="wwwroot\ISLagoIMG\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ISLAGO_V3.Entidad\ISLAGO_V3.Entidad.csproj" />
     <ProjectReference Include="..\ISLAGO_V3.IoC\ISLAGO_V3.IoC.csproj" />
     <ProjectReference Include="..\ISLAGO_V3.Negocio\ISLAGO_V3.Negocio.csproj" />
@@ -14,7 +21,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\img\usuarios-img\" />
-    <Folder Include="wwwroot\ISLagoIMG\" />
   </ItemGroup>
 
 </Project>

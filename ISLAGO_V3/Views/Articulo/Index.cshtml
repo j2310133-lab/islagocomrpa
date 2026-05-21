@@ -142,6 +142,182 @@
     </div>
 </div>
 
+<!-- ===================================== -->
+<!-- MODAL EDITAR ARTICULO -->
+<!-- ===================================== -->
+
+<div class="modal fade" id="modalEditarArticulo">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Editar Artículo
+                </h5>
+
+                <button class="close text-white" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <input type="hidden" id="editIdArticulo">
+
+                <div class="row">
+
+                    <!-- ========================= -->
+                    <!-- IZQUIERDA -->
+                    <!-- ========================= -->
+
+                    <div class="col-md-6">
+
+                        <label>Nombre</label>
+                        <input type="text"
+                               id="editNombre"
+                               class="form-control mb-3">
+
+                        <label>Descripción</label>
+                        <textarea id="editDescripcion"
+                                  rows="4"
+                                  class="form-control mb-3"></textarea>
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <label>Precio</label>
+
+                                <input type="number"
+                                       id="editPrecio"
+                                       class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Stock</label>
+
+                                <input type="number"
+                                       id="editStock"
+                                       class="form-control">
+                            </div>
+
+                        </div>
+
+                        <label class="mt-3">Unidad de Medida</label>
+
+                        <select id="editUnidadMedida" class="form-control">
+                            <option value="">-- Seleccionar unidad --</option>
+                        </select>
+
+                        <label>Estado</label>
+
+                        <select id="editActivo"
+                                class="form-control">
+
+                            <option value="true">
+                                Activo
+                            </option>
+
+                            <option value="false">
+                                Inactivo
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- ========================= -->
+                    <!-- DERECHA -->
+                    <!-- ========================= -->
+
+                    <div class="col-md-6">
+
+                        <!-- IMAGENES ACTUALES -->
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <label class="mb-0">
+                                Imágenes del artículo
+                            </label>
+
+                            <small class="text-muted">
+                                Selecciona imagen principal
+                            </small>
+
+                        </div>
+
+                        <!-- GALERIA -->
+                        <div id="editPreview"
+                             class="preview-container-edit">
+                        </div>
+
+                        <!-- AGREGAR NUEVAS -->
+                        <div class="upload-box mt-3">
+
+                            <i class="fas fa-cloud-upload-alt"></i>
+
+                            <p>
+                                Agregar nuevas imágenes
+                            </p>
+
+                            <input id="editInputImagenes"
+                                   type="file"
+                                   multiple
+                                   accept="image/*">
+                        </div>
+
+                        <!-- PREVIEW NUEVAS -->
+                        <div id="editPreviewNuevas"
+                             class="preview-container mt-3">
+                        </div>
+
+                        <!-- CATEGORIAS -->
+                        <label class="mt-4">
+                            Categorías
+                        </label>
+
+                        <select id="editCategoriaSelect"
+                                class="form-control mb-2">
+
+                            <option value="">
+                                -- Seleccionar categoría --
+                            </option>
+
+                        </select>
+
+                        <div id="editCategoriasSeleccionadas"
+                             class="categoria-box">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+
+                <button class="btn btn-secondary"
+                        data-dismiss="modal">
+
+                    Cancelar
+                </button>
+
+                <button id="btnActualizarArticulo"
+                        class="btn btn-primary">
+
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/articulo.js" asp-append-version="true"></script>
 }

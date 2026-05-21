@@ -1,4 +1,5 @@
 ﻿let categorias = [];
+let editImagenesBase64 = [];
 
 document.getElementById("categoriaSelect").addEventListener("change", function () {
     const id = this.value;
@@ -68,42 +69,120 @@ async function listarArticulos() {
 
 // Ver descripcion
 function verDescripcion(desc) {
+
     Swal.fire({
-        title: 'Descripción completa',
-        html: `<div style="text-align:left">${desc}</div>`,
-        width: 600,
-        confirmButtonText: 'Cerrar'
+
+        html: `
+            <div class="descripcion-modal">
+
+                <div class="descripcion-icon">
+
+                    <i class="fas fa-align-left"></i>
+
+                </div>
+
+                <h3>
+                    Descripción del artículo
+                </h3>
+
+                <div class="descripcion-content">
+                    ${desc}
+                </div>
+
+            </div>
+        `,
+
+        showConfirmButton: true,
+
+        confirmButtonText: 'Cerrar',
+
+        customClass: {
+            popup: 'descripcion-popup',
+            confirmButton: 'descripcion-btn'
+        }
+
     });
+
 }
 
 // Cargar categorias en MODAL
 async function cargarCategorias() {
+
     const res = await fetch("/Articulo/ObtenerCategorias");
     const data = await res.json();
 
+    // =========================
+    // MODAL CREAR
+    // =========================
     const select = document.getElementById("categoriaSelect");
-    
+
+    select.innerHTML = `
+        <option value="">-- Seleccionar categoría --</option>
+    `;
+
+    // =========================
+    // MODAL EDITAR
+    // =========================
+    const editSelect = document.getElementById("editCategoriaSelect");
+
+    editSelect.innerHTML = `
+        <option value="">-- Seleccionar categoría --</option>
+    `;
+
     data.forEach(c => {
+
+        // CREATE
         const option = document.createElement("option");
         option.value = c.id;
         option.textContent = c.nombre;
-        select.appendChild(option); 
+        select.appendChild(option);
+
+        // EDIT
+        const optionEdit = document.createElement("option");
+        optionEdit.value = c.id;
+        optionEdit.textContent = c.nombre;
+        editSelect.appendChild(optionEdit);
+
     });
+
 }
 
 // Cargar Unidad Medida en MODAL
 async function cargarUmedidas() {
+
     const res = await fetch("/Articulo/ObtenerUnidadesMedida");
     const data = await res.json();
 
+    // CREAR
     const select = document.getElementById("unidadMedida");
 
+    select.innerHTML = `
+        <option value="">-- Seleccionar unidad --</option>
+    `;
+
+    // EDITAR
+    const editSelect = document.getElementById("editUnidadMedida");
+
+    editSelect.innerHTML = `
+        <option value="">-- Seleccionar unidad --</option>
+    `;
+
     data.forEach(u => {
+
+        // CREAR
         const option = document.createElement("option");
         option.value = u.id;
         option.textContent = u.nombre;
         select.appendChild(option);
+
+        // EDITAR
+        const optionEdit = document.createElement("option");
+        optionEdit.value = u.id;
+        optionEdit.textContent = u.nombre;
+        editSelect.appendChild(optionEdit);
+
     });
+
 }
 
 // ===================================
@@ -146,11 +225,7 @@ async function renderArticulos(data) {
 
             <td>
                 ${a.descripcionCorta || ""}
-                ${a.descripcionCompleta && a.descripcionCompleta.length > 60
-                ? `<button class="btn btn-sm btn-info ms-2" onclick="verDescripcion('${a.descripcionCompleta.replace(/'/g, "\\'")}')">
-                        <i class="fas fa-eye"></i>
-                   </button>`
-                : ""}
+                
             </td>
 
             <td>C$ ${a.precio}</td>
@@ -165,23 +240,73 @@ async function renderArticulos(data) {
 
             <td>
 
-            <button
-                class="btn btn-sm btn-primary"
-                onclick="editarArticulo(${a.id})">
+                <div class="actions-dropdown">
 
-                <i class="fas fa-edit"></i>
+                    <button
+                        class="actions-btn"
+                        onclick="toggleActionsMenu(this)">
 
-            </button>
+                        <i class="fas fa-ellipsis-v"></i>
 
-            <button
-                class="btn btn-sm btn-danger"
-                onclick="cambiarEstado(${a.id}, ${a.activo})">
+                    </button>
 
-                <i class="fas fa-trash"></i>
+                    <div class="actions-menu">
 
-            </button>
+                        ${a.descripcionCompleta && a.descripcionCompleta.length > 60
+                            ? `
+                            <button
+                                class="actions-item"
+                                onclick="verDescripcion('${a.descripcionCompleta.replace(/'/g, "\\'")}')">
 
-        </td>
+                                <i class="fas fa-eye"></i>
+                                Ver descripción
+
+                            </button>
+                            `
+                            : ""}
+
+                        <button
+                            class="actions-item"
+                            onclick="editarArticulo(${a.id})">
+
+                            <i class="fas fa-edit"></i>
+                            Editar
+
+                        </button>
+
+                        <button
+                            class="actions-item"
+                            onclick="ajustarStock(${a.id})">
+
+                            <i class="fas fa-boxes"></i>
+                            Ajustar stock
+
+                        </button>
+
+                        <button
+                            class="actions-item"
+                            onclick="administrarImagenes(${a.id})">
+
+                            <i class="fas fa-images"></i>
+                            Administrar imágenes
+
+                        </button>
+
+                        <button
+                            class="actions-item danger"
+                            onclick="cambiarEstado(${a.id}, ${a.activo})">
+
+                            <i class="fas fa-trash"></i>
+
+                            ${a.activo ? 'Eliminar' : 'Restaurar'}
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </td>
         `;
 
         tbody.appendChild(tr);
@@ -301,24 +426,271 @@ document.getElementById("btnGuardar").addEventListener("click", async function (
 // ==========================
 // EDITAR
 // ==========================
-//function editarArticulo(id) {
+function renderEditCategorias() {
 
-//    const articulo = listaArticulos.find(a => a.id == id);
+    const container = document.getElementById("editCategoriasSeleccionadas");
 
-//    if (!articulo) return;
+    container.innerHTML = "";
 
-//    // Abrir modal
-//    $("#modalArticulo").modal("show");
+    editCategorias.forEach(cat => {
 
-//    // Llenar campos
-//    document.getElementById("nombre").value = articulo.nombre;
-//    document.getElementById("descripcion").value = articulo.descripcionCompleta;
-//    document.getElementById("precio").value = articulo.precio;
-//    document.getElementById("stock").value = articulo.stock;
-//    document.getElementById("activo").value = articulo.activo.toString();
-//    document.getElementById("imagen").value = articulo.imagen;
-//}
+        const option = document.querySelector(
+            `#editCategoriaSelect option[value="${cat}"]`
+        );
 
+        const nombre = option?.textContent || "Categoria";
+
+        container.innerHTML += `
+            <div class="categoria-tag">
+
+                ${nombre}
+
+                <i
+                    class="fas fa-times"
+                    onclick="eliminarCategoriaEdit('${cat}')">
+                </i>
+
+            </div>
+        `;
+
+    });
+
+}
+
+document.getElementById("editCategoriaSelect")
+    .addEventListener("change", function () {
+        const id = this.value;
+        const text = this.options[this.selectedIndex].text;
+
+        if (!id || editCategorias.includes(id)) return;
+
+        editCategorias.push(id);
+
+        renderEditCategorias();
+
+        this.value = "";
+    });
+
+document.getElementById("editInputImagenes")
+    .addEventListener("change", function () {
+
+        const files = this.files;
+
+        editImagenesBase64 = [];
+
+        const preview = document.getElementById("editPreviewNuevas");
+
+        preview.innerHTML = "";
+
+        Array.from(files).forEach(file => {
+
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+
+                editImagenesBase64.push(e.target.result);
+
+                preview.innerHTML += `
+                <img
+                    src="${e.target.result}"
+                    class="preview-img">
+            `;
+
+            };
+
+            reader.readAsDataURL(file);
+
+        });
+
+    });
+
+async function editarArticulo(id) {
+
+    try {
+
+        const res = await fetch(`/Articulo/ObtenerPorId?id=${id}`);
+
+        const articulo = await res.json();
+
+        if (!res.ok) {
+            throw new Error(articulo.message);
+        }
+
+        // ==========================
+        // ABRIR MODAL
+        // ==========================
+
+        $("#modalEditarArticulo").modal("show");
+
+        // ==========================
+        // INPUTS
+        // ==========================
+
+        document.getElementById("editIdArticulo").value = articulo.id;
+
+        document.getElementById("editNombre").value = articulo.nombre;
+
+        document.getElementById("editDescripcion").value =
+            articulo.descripcion || "";
+
+        document.getElementById("editPrecio").value = articulo.precio;
+
+        document.getElementById("editStock").value = articulo.stock;
+
+        document.getElementById("editUnidadMedida").value =
+            articulo.idumedida;
+
+        document.getElementById("editActivo").value =
+            articulo.activo.toString();
+
+        // ==========================
+        // CATEGORIAS
+        // ==========================
+
+        editCategorias = [];
+
+        if (articulo.categorias) {
+
+            articulo.categorias.forEach(cat => {
+
+                editCategorias.push(cat.idcategoria.toString());
+
+            });
+
+        }
+
+        renderEditCategorias();
+
+        // ==========================
+        // IMAGENES ACTUALES
+        // ==========================
+
+        const preview = document.getElementById("editPreview");
+
+        preview.innerHTML = "";
+
+        if (articulo.imagen) {
+
+            articulo.imagen.forEach(img => {
+
+                preview.innerHTML += `
+                    <div class="preview-edit-card">
+
+                        <img
+                            src="${img.ruta}">
+
+                    </div>
+                `;
+
+            });
+
+        }
+
+    }
+    catch (error) {
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message
+        });
+
+    }
+
+}
+
+function eliminarCategoriaEdit(id) {
+
+    editCategorias = editCategorias.filter(c => c != id);
+
+    renderEditCategorias();
+
+}
+
+//Guardar cambios
+document.getElementById("btnActualizarArticulo")
+    .addEventListener("click", async function () {
+
+        try {
+
+            const data = {
+
+                id: parseInt(
+                    document.getElementById("editIdArticulo").value
+                ),
+
+                nombre: document.getElementById("editNombre").value,
+
+                descripcion:
+                    document.getElementById("editDescripcion").value,
+
+                precio: parseFloat(
+                    document.getElementById("editPrecio").value
+                ),
+
+                stock: parseInt(
+                    document.getElementById("editStock").value
+                ),
+
+                idumedida: parseInt(
+                    document.getElementById("editUnidadMedida").value
+                ),
+
+                activo:
+                    document.getElementById("editActivo").value === "true",
+
+                categoriasId: editCategorias,
+
+                imagenesBase64: editImagenesBase64
+
+            };
+
+            const res = await fetch("/Articulo/Actualizar", {
+
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                throw new Error(result.message);
+            }
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Artículo actualizado correctamente',
+                timer: 1800,
+                showConfirmButton: false
+            });
+
+            $("#modalEditarArticulo").modal("hide");
+
+            listarArticulos();
+
+        }
+        catch (error) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message
+            });
+
+        }
+
+    });
+
+// =============================
+// Funcion CambiarEstado
+// =============================
 async function cambiarEstado(id, activoActual) {
 
     const nuevoEstado = !activoActual;
@@ -384,3 +756,35 @@ async function cambiarEstado(id, activoActual) {
 
     }
 }
+
+// =====================================
+// MENU ACCIONES
+// =====================================
+
+function toggleActionsMenu(button) {
+
+    // cerrar otros
+    document.querySelectorAll(".actions-menu").forEach(menu => {
+
+        if (menu !== button.nextElementSibling) {
+            menu.classList.remove("show");
+        }
+
+    });
+
+    // abrir actual
+    button.nextElementSibling.classList.toggle("show");
+}
+
+// cerrar al hacer click afuera
+document.addEventListener("click", function (e) {
+
+    if (!e.target.closest(".actions-dropdown")) {
+
+        document.querySelectorAll(".actions-menu").forEach(menu => {
+            menu.classList.remove("show");
+        });
+
+    }
+
+});
