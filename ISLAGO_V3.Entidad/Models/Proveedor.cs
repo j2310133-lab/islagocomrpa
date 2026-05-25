@@ -9,6 +9,8 @@ public partial class Proveedor
 
     public int? Idpersona { get; set; }
 
+    public virtual ICollection<Articulo> Articulos { get; set; } = new List<Articulo>();
+
     public virtual ICollection<Compra> Compras { get; set; } = new List<Compra>();
 
     public virtual Persona? IdpersonaNavigation { get; set; }

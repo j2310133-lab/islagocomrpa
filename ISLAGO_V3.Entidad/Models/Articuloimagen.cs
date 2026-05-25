@@ -11,6 +11,10 @@ public partial class Articuloimagen
 
     public int? Idarticulo { get; set; }
 
+    public bool? EsPrincipal { get; set; }
+
+    public int? Orden { get; set; }
+
     public virtual Articulo? IdarticuloNavigation { get; set; }
 
     public virtual Imagen? IdimagenNavigation { get; set; }

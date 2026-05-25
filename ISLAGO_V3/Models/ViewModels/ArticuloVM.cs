@@ -6,29 +6,52 @@ namespace ISLAGO_V3.Models.ViewModels
     {
         public int Id { get; set; }
 
-        public string Nombre { get; set; } = null;
+        public string Nombre { get; set; } = null!;
+
         public string? Descripcion { get; set; }
 
-        public decimal Precio { get; set; }
         public decimal? Stock { get; set; }
 
-        public int Idumedida { get; set; }
+        public int? Idumedida { get; set; }
 
         public bool? Activo { get; set; }
 
-        // Entrada imágenes
+        public string? Sku { get; set; }
+
+        public string? Marca { get; set; }
+
+        public decimal? PrecioCompra { get; set; }
+
+        public decimal? PrecioVentaMinorista { get; set; }
+
+        public decimal? PrecioVentaMayorista { get; set; }
+
+        public decimal? StockMinimo { get; set; }
+
+        public string? Ubicacion { get; set; }
+
+        public int? Idproveedor { get; set; }
+
+        public bool? PermiteDescuento { get; set; }
+
+        public bool? EsServicio { get; set; }
+
+        public decimal? PorcentajeGananciaMinorista { get; set; }
+
+        public decimal? PorcentajeGananciaMayorista { get; set; }
+
+        public bool? PermiteDecimal { get; set; }
+
+        // IMAGENES
         public List<string>? ImagenesBase64 { get; set; }
 
-        // Salida imágenes
         public string? ImagenesUrl { get; set; }
 
-        // Entrada categorías
+        // CATEGORIAS
         public List<int>? CategoriasId { get; set; }
 
-        // Salida categorías 
         public List<CategoriaVM>? Categorias { get; set; }
 
-        // Listar el total de imagenes
-        public int TotalImagenes {  get; set; }
+        public int TotalImagenes { get; set; }
     }
 }

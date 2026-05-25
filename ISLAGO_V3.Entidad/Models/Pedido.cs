@@ -37,13 +37,14 @@ public partial class Pedido
 
     public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();
 
+    public virtual ICollection<Historialestadopedido> Historialestadopedidos { get; set; } = new List<Historialestadopedido>();
+
     public virtual Persona? IdclienteNavigation { get; set; }
 
-    public virtual Pedido? IdestadoNavigation { get; set; }
+    public virtual Estadopedido? IdestadoNavigation { get; set; }
 
     public virtual Usuario? IdusuarioNavigation { get; set; }
 
-    public virtual ICollection<Pedido> InverseIdestadoNavigation { get; set; } = new List<Pedido>();
-
     public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 }
+

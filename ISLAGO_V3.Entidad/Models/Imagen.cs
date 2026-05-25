@@ -21,6 +21,8 @@ public partial class Imagen
 
     public bool? Estado { get; set; }
 
+    public string? Hash { get; set; }
+
     public virtual ICollection<Articuloimagen> Articuloimagens { get; set; } = new List<Articuloimagen>();
 
     public virtual ICollection<Entrega> Entregas { get; set; } = new List<Entrega>();
@@ -29,5 +31,5 @@ public partial class Imagen
 
     public virtual ICollection<Proforma> Proformas { get; set; } = new List<Proforma>();
 
-    public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+    public virtual ICollection<Usuarioimagen> Usuarioimagens { get; set; } = new List<Usuarioimagen>();
 }

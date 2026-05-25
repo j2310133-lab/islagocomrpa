@@ -23,11 +23,7 @@ public partial class Usuario
 
     public int? Idpersona { get; set; }
 
-    public int? Idimagen { get; set; }
-
     public virtual ICollection<Codigo2fa> Codigo2fas { get; set; } = new List<Codigo2fa>();
-
-    public virtual Imagen? IdimagenNavigation { get; set; }
 
     public virtual Persona? IdpersonaNavigation { get; set; }
 
@@ -46,4 +42,6 @@ public partial class Usuario
     public virtual ICollection<Usuario2fauth> Usuario2fauths { get; set; } = new List<Usuario2fauth>();
 
     public virtual ICollection<UsuarioRol> UsuarioRols { get; set; } = new List<UsuarioRol>();
+
+    public virtual ICollection<Usuarioimagen> Usuarioimagens { get; set; } = new List<Usuarioimagen>();
 }

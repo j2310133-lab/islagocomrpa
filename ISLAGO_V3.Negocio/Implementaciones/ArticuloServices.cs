@@ -84,11 +84,17 @@ namespace ISLAGO_V3.Negocio.Implementaciones
                 if (string.IsNullOrWhiteSpace(e.Nombre))
                     throw new Exception("El nombre del articulo es obligatorio.");
 
-                if (e.Precio <= 0)
-                    throw new Exception("El precio debe de ser mayor que 0.");
+                if (e.PrecioCompra < 0)
+                    throw new Exception("El precio de compra no puede ser negativo.");
 
-                if (e.Stock < 0)
-                    throw new Exception("El stock no puede tener sumas negativas");
+                if (e.PrecioVentaMinorista < 0)
+                    throw new Exception("El precio minorista no puede ser negativo.");
+
+                if (e.PrecioVentaMayorista < 0)
+                    throw new Exception("El precio mayorista no puede ser negativo.");
+
+                if ((e.Stock ?? 0) < 0)
+                    throw new Exception("El stock no puede ser negativo.");
 
                 // Validar duplicados
                 var existencia = await _artRep.Obtener(a => a.Nombre.ToLower() == e.Nombre.ToLower().Trim());
@@ -102,6 +108,14 @@ namespace ISLAGO_V3.Negocio.Implementaciones
                 e.Nombre = e.Nombre.Trim();
                 e.Descripcion = e.Descripcion?.Trim();
                 e.Activo = true;
+                e.Marca = e.Marca?.Trim();
+                e.Sku = e.Sku?.Trim().ToUpper();
+                e.Ubicacion = e.Ubicacion?.Trim();
+
+                if (e.Idproveedor == null || e.Idproveedor <= 0)
+                {
+                    e.Idproveedor = 1;
+                }
 
                 // ---------------------
                 // CREAR ARTICULO
@@ -177,53 +191,202 @@ namespace ISLAGO_V3.Negocio.Implementaciones
 
         public async Task<bool> Actualizar(int id, Articulo e, List<string>? imagenesBase64)
         {
-            
+
             using var transaction = await _uow.BeginTransactionAsync();
 
             try
             {
-                if (e == null) throw new Exception("El articulo no puede ser nulo.");
+
+                // =========================
+                // VALIDACIONES
+                // =========================
+
+                if (e == null)
+                    throw new Exception("El articulo no puede ser nulo.");
 
                 var articuloDB = await _artRep.Obtener(a => a.Id == id);
-                if (articuloDB == null) throw new Exception("No existe el articulo");
 
-                if (string.IsNullOrEmpty(e.Nombre)) throw new Exception("El nombre del articulo es obligatorio.");
+                if (articuloDB == null)
+                    throw new Exception("No existe el articulo.");
 
-                if (e.Precio <= 0) throw new Exception("El precio debe de ser mayor que 0.");
+                if (string.IsNullOrWhiteSpace(e.Nombre))
+                    throw new Exception("El nombre del articulo es obligatorio.");
 
-                if (e.Stock < 0) throw new Exception("El stock no puede tener sumas negativas");
+                if (e.PrecioCompra < 0)
+                    throw new Exception("El precio de compra no puede ser negativo.");
 
-                //validar duplicados 
+                if (e.PrecioVentaMinorista < 0)
+                    throw new Exception("El precio minorista no puede ser negativo.");
+
+                if (e.PrecioVentaMayorista < 0)
+                    throw new Exception("El precio mayorista no puede ser negativo.");
+
+                if ((e.Stock ?? 0) < 0)
+                    throw new Exception("El stock no puede ser negativo.");
+
+                // =========================
+                // VALIDAR DUPLICADOS
+                // =========================
+
                 var duplicado = await _artRep.Obtener(a =>
-                    a.Nombre.ToLower() == e.Nombre.ToLower().Trim() &&
-                    a.Id != id);
+                    a.Nombre.ToLower() == e.Nombre.ToLower().Trim()
+                    && a.Id != id
+                );
 
-                if (duplicado != null) throw new Exception("Ya existe un articulo con ese nombre.");
+                if (duplicado != null)
+                    throw new Exception("Ya existe un articulo con ese nombre.");
+
+                // =========================
+                // NORMALIZAR
+                // =========================
+
+                e.Nombre = e.Nombre.Trim();
+
+                e.Descripcion = e.Descripcion?.Trim();
+
+                e.Marca = e.Marca?.Trim();
+
+                e.Sku = e.Sku?.Trim().ToUpper();
+
+                e.Ubicacion = e.Ubicacion?.Trim();
+
+                // =========================
+                // PROVEEDOR POR DEFECTO
+                // =========================
+
+                if (e.Idproveedor == null || e.Idproveedor <= 0)
+                {
+                    e.Idproveedor = 1;
+                }
 
                 // =========================
                 // ACTUALIZAR CAMPOS
                 // =========================
 
-                articuloDB.Nombre = e.Nombre.Trim();
-                articuloDB.Descripcion = e.Descripcion?.Trim();
-                articuloDB.Precio = e.Precio;
+                articuloDB.Nombre = e.Nombre;
+                articuloDB.Descripcion = e.Descripcion;
+
                 articuloDB.Stock = e.Stock;
+
                 articuloDB.Idumedida = e.Idumedida;
+
                 articuloDB.Activo = e.Activo;
+
+                articuloDB.Sku = e.Sku;
+
+                articuloDB.Marca = e.Marca;
+
+                articuloDB.PrecioCompra = e.PrecioCompra;
+
+                articuloDB.PrecioVentaMinorista = e.PrecioVentaMinorista;
+
+                articuloDB.PrecioVentaMayorista = e.PrecioVentaMayorista;
+
+                articuloDB.StockMinimo = e.StockMinimo;
+
+                articuloDB.Ubicacion = e.Ubicacion;
+
+                articuloDB.Idproveedor = e.Idproveedor;
+
+                articuloDB.PermiteDescuento = e.PermiteDescuento;
+
+                articuloDB.EsServicio = e.EsServicio;
+
+                articuloDB.PorcentajeGananciaMinorista =
+                    e.PorcentajeGananciaMinorista;
+
+                articuloDB.PorcentajeGananciaMayorista =
+                    e.PorcentajeGananciaMayorista;
+
+                articuloDB.PermiteDecimal = e.PermiteDecimal;
+
+                // =========================
+                // GUARDAR CAMBIOS
+                // =========================
 
                 var result = await _artRep.Editar(articuloDB);
 
-                if (!result) throw new Exception("No se puede actualizar el articulo.");
+                if (!result)
+                    throw new Exception("No se puede actualizar el articulo.");
+
+                // =========================
+                // AGREGAR NUEVAS IMAGENES
+                // =========================
+
+                if (imagenesBase64 != null && imagenesBase64.Any())
+                {
+
+                    foreach (var base64 in imagenesBase64)
+                    {
+
+                        if (string.IsNullOrWhiteSpace(base64))
+                            continue;
+
+                        // BASE64 -> STREAM
+                        var stream = Base64ToStream(base64);
+
+                        // EXTENSION
+                        var extencion = ObtenerExtenciones(base64);
+
+                        // NOMBRE ARCHIVO
+                        string NombreArchivo =
+                            $"{Guid.NewGuid()}{extencion}";
+
+                        // GUARDAR STORAGE
+                        var url = await _imgServ.GuardarImagen(
+                            stream,
+                            "imagen-articulo",
+                            NombreArchivo
+                        );
+
+                        if (url.StartsWith("Error")
+                            || url.StartsWith("No existe"))
+                        {
+                            throw new Exception(url);
+                        }
+
+                        // GUARDAR IMAGEN DB
+                        var imagen = await _imgRep.Crear(new Imagen
+                        {
+                            Nombre = NombreArchivo,
+                            Ruta = url,
+                            Tipo = extencion,
+                            Tamaño = (int)(stream.Length / 1024),
+                            Fechaeditada = DateTime.UtcNow,
+                            Estado = true
+                        });
+
+                        if (imagen == null)
+                            throw new Exception("No se pudo guardar la imagen.");
+
+                        // RELACION
+                        await _AImg.Crear(new Articuloimagen
+                        {
+                            Idarticulo = articuloDB.Id,
+                            Idimagen = imagen.Id
+                        });
+
+                    }
+
+                }
 
                 await transaction.CommitAsync();
+
                 return true;
+
             }
             catch (Exception ex)
             {
+
                 await transaction.RollbackAsync();
-                throw new Exception($"Error al intentar actualizar el articulo: {ex.Message}", ex);
+
+                throw new Exception(
+                    $"Error al intentar actualizar el articulo: {ex.Message}",
+                    ex
+                );
+
             }
-                        
+
         }
 
         public async Task<bool> AgregarImagenes(int idArt, List<string> base64imagenes)
@@ -496,8 +659,17 @@ namespace ISLAGO_V3.Negocio.Implementaciones
 
                 await t.CommitAsync();
 
-                return lista.Where(a => a.Nombre.ToLower().Contains(filtro) ||
-                    (a.Descripcion != null && a.Descripcion.ToLower().Contains(filtro))
+                return lista.Where(a =>
+                    a.Nombre.ToLower().Contains(filtro) ||
+
+                    (a.Descripcion != null &&
+                     a.Descripcion.ToLower().Contains(filtro)) ||
+
+                    (a.Marca != null &&
+                     a.Marca.ToLower().Contains(filtro)) ||
+
+                    (a.Sku != null &&
+                     a.Sku.ToLower().Contains(filtro))
                 ).ToList();
 
             }
@@ -532,7 +704,12 @@ namespace ISLAGO_V3.Negocio.Implementaciones
 
                 nombre = nombre.ToLower().Trim();
 
-                var lista = await _artRep.Consultar(a => a.Nombre.ToLower().Contains(nombre));
+                var lista = await _artRep.Consultar(a =>
+                    a.Nombre.ToLower().Contains(nombre)
+                    ||
+                    (a.Marca != null &&
+                     a.Marca.ToLower().Contains(nombre))
+                );
 
                 return lista.ToList();
 

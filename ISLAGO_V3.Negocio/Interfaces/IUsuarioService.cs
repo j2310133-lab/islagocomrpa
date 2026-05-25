@@ -11,16 +11,41 @@ namespace ISLAGO_V3.Negocio.Interfaces
     {
         Task<List<Usuario>> ObtenerTodos();
         Task<Usuario> ObtenerPorId(int id);
-        Task<List<Articulo>> ObtenerPorNombre(string nombre);
-        Task<List<Articulo>> Buscar(string filtro);
-        Task<List<Articulo>> ObtenerActivos();
+        Task<List<Usuario>> ObtenerPorUsername(string nombre);
+        Task<List<Usuario?>> ObtenerPorGmail(string email);
+        Task<List<Usuario>> Buscar(string filtro);
+        Task<List<Usuario>> ObtenerActivos();
+        Task<List<Usuario>> ObtenerBloqueados();
+
+        // ===================================
+        // Logica de autenticaciòn
+        // ===================================
+        Task<Usuario?> Login(string username, string password);
+        Task<bool> LogOut(string token);
+        Task<bool> ValidarPassword(Usuario usuario, string passwrod);
 
         // CRUD
-        Task<Articulo> Crear(Articulo e, List<string>? imagenesBase64);
-        Task<bool> Actualizar(int id, Articulo e, List<string>? imagenesBase64);
+        Task<Usuario> Crear(Usuario  user, string password,List<int> roles, string? imagenBase64);
+        Task<bool> Actualizar(int id,Usuario user, string password, List<int> roles, string? imagenBase64);
         Task<bool> Eliminar(int id);
+        // =====================
+        // PASSWORD
+        // =====================
+        Task<bool> CambiarContrasenia(int idUser, string actualpass, string newpass);
+        Task<bool> ResetPassword(int iduser, bool activo);
 
-        // Estado
+        // =================================
+        // Logica Estado de usuario
+        // =================================
         Task<bool> CambiarEstado(int id, bool activo);
+        Task<bool> BloquearUsuario(int id);
+        Task<bool> DesbloquearUsuario(int id);
+
+        // =====================
+        // VALIDACIONES
+        // =====================
+        Task<bool> UsernameExiste(string username);
+
+        Task<bool> EmailExiste(string email);
     }
 }

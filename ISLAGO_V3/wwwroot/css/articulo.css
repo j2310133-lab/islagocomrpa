@@ -504,3 +504,18 @@ body {
         max-height: 850px;
     }
 }
+
+
+.product-name {
+    display: flex;
+    flex-direction: column;
+}
+
+    .product-name strong {
+        font-size: 14px;
+    }
+
+    .product-name small {
+        color: #6c757d;
+        font-size: 12px;
+    }

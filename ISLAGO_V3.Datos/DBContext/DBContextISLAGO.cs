@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using ISLAGO_V3.Entidad.Models;
+﻿using ISLAGO_V3.Entidad.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using Articulo = ISLAGO_V3.Entidad.Models.Articulo;
 
 namespace ISLAGO_V3.Datos.DBContext;
 
@@ -42,11 +43,13 @@ public partial class DBContextISLAGO : DbContext
 
     public virtual DbSet<Entrega> Entregas { get; set; }
 
-    public virtual DbSet<EstadoPedido> EstadoPedidos { get; set; }
+    public virtual DbSet<Estadopedido> Estadopedidos { get; set; }
 
     public virtual DbSet<Factura> Facturas { get; set; }
 
     public virtual DbSet<FormaPago> FormaPagos { get; set; }
+
+    public virtual DbSet<Historialestadopedido> Historialestadopedidos { get; set; }
 
     public virtual DbSet<Imagen> Imagens { get; set; }
 
@@ -82,6 +85,9 @@ public partial class DBContextISLAGO : DbContext
 
     public virtual DbSet<UsuarioRol> UsuarioRols { get; set; }
 
+    public virtual DbSet<Usuarioimagen> Usuarioimagens { get; set; }
+
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
     }
@@ -94,22 +100,68 @@ public partial class DBContextISLAGO : DbContext
 
             entity.ToTable("articulo");
 
+            entity.HasIndex(e => e.Nombre, "idx_articulo_nombre");
+
+            entity.HasIndex(e => e.Sku, "idx_articulo_sku");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true)
                 .HasColumnName("activo");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+            entity.Property(e => e.EsServicio)
+                .HasDefaultValue(false)
+                .HasColumnName("es_servicio");
+            entity.Property(e => e.Idproveedor).HasColumnName("idproveedor");
             entity.Property(e => e.Idumedida).HasColumnName("idumedida");
+            entity.Property(e => e.Marca)
+                .HasMaxLength(100)
+                .HasColumnName("marca");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .HasColumnName("nombre");
-            entity.Property(e => e.Precio)
+            entity.Property(e => e.PermiteDecimal)
+                .HasDefaultValue(false)
+                .HasColumnName("permite_decimal");
+            entity.Property(e => e.PermiteDescuento)
+                .HasDefaultValue(true)
+                .HasColumnName("permite_descuento");
+            entity.Property(e => e.PorcentajeGananciaMayorista)
+                .HasPrecision(5, 2)
+                .HasColumnName("porcentaje_ganancia_mayorista");
+            entity.Property(e => e.PorcentajeGananciaMinorista)
+                .HasPrecision(5, 2)
+                .HasColumnName("porcentaje_ganancia_minorista");
+            entity.Property(e => e.PrecioCompra)
                 .HasPrecision(10, 2)
-                .HasColumnName("precio");
+                .HasDefaultValueSql("0")
+                .HasColumnName("precio_compra");
+            entity.Property(e => e.PrecioVentaMayorista)
+                .HasPrecision(10, 2)
+                .HasDefaultValueSql("0")
+                .HasColumnName("precio_venta_mayorista");
+            entity.Property(e => e.PrecioVentaMinorista)
+                .HasPrecision(10, 2)
+                .HasDefaultValueSql("0")
+                .HasColumnName("precio_venta_minorista");
+            entity.Property(e => e.Sku)
+                .HasMaxLength(100)
+                .HasColumnName("sku");
             entity.Property(e => e.Stock)
                 .HasPrecision(10, 2)
                 .HasDefaultValueSql("0")
                 .HasColumnName("stock");
+            entity.Property(e => e.StockMinimo)
+                .HasPrecision(10, 2)
+                .HasDefaultValueSql("0")
+                .HasColumnName("stock_minimo");
+            entity.Property(e => e.Ubicacion)
+                .HasMaxLength(150)
+                .HasColumnName("ubicacion");
+
+            entity.HasOne(d => d.IdproveedorNavigation).WithMany(p => p.Articulos)
+                .HasForeignKey(d => d.Idproveedor)
+                .HasConstraintName("articulo_idproveedor_fkey");
 
             entity.HasOne(d => d.IdumedidaNavigation).WithMany(p => p.Articulos)
                 .HasForeignKey(d => d.Idumedida)
@@ -141,9 +193,19 @@ public partial class DBContextISLAGO : DbContext
 
             entity.ToTable("articuloimagen");
 
+            entity.HasIndex(e => e.Idarticulo, "idx_articuloimagen_articulo");
+
+            entity.HasIndex(e => e.Idimagen, "idx_articuloimagen_imagen");
+
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.EsPrincipal)
+                .HasDefaultValue(false)
+                .HasColumnName("es_principal");
             entity.Property(e => e.Idarticulo).HasColumnName("idarticulo");
             entity.Property(e => e.Idimagen).HasColumnName("idimagen");
+            entity.Property(e => e.Orden)
+                .HasDefaultValue(0)
+                .HasColumnName("orden");
 
             entity.HasOne(d => d.IdarticuloNavigation).WithMany(p => p.Articuloimagens)
                 .HasForeignKey(d => d.Idarticulo)
@@ -303,6 +365,10 @@ public partial class DBContextISLAGO : DbContext
 
             entity.ToTable("detalle_pedido");
 
+            entity.HasIndex(e => e.Idarticulo, "idx_detallepedido_articulo");
+
+            entity.HasIndex(e => e.Idpedido, "idx_detallepedido_pedido");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Cantidad)
                 .HasPrecision(10, 2)
@@ -403,13 +469,13 @@ public partial class DBContextISLAGO : DbContext
                 .HasConstraintName("entrega_idpedido_fkey");
         });
 
-        modelBuilder.Entity<EstadoPedido>(entity =>
+        modelBuilder.Entity<Estadopedido>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("estado_pedido_pkey");
+            entity.HasKey(e => e.Id).HasName("estadopedido_pkey");
 
-            entity.ToTable("estado_pedido");
+            entity.ToTable("estadopedido");
 
-            entity.HasIndex(e => e.Nombre, "estado_pedido_nombre_key").IsUnique();
+            entity.HasIndex(e => e.Nombre, "estadopedido_nombre_key").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Nombre)
@@ -460,6 +526,31 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnName("nombre");
         });
 
+        modelBuilder.Entity<Historialestadopedido>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("historialestadopedido_pkey");
+
+            entity.ToTable("historialestadopedido");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Fecha)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fecha");
+            entity.Property(e => e.Idestadopedido).HasColumnName("idestadopedido");
+            entity.Property(e => e.Idpedido).HasColumnName("idpedido");
+
+            entity.HasOne(d => d.IdestadopedidoNavigation).WithMany(p => p.Historialestadopedidos)
+                .HasForeignKey(d => d.Idestadopedido)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("historialestadopedido_idestadopedido_fkey");
+
+            entity.HasOne(d => d.IdpedidoNavigation).WithMany(p => p.Historialestadopedidos)
+                .HasForeignKey(d => d.Idpedido)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("historialestadopedido_idpedido_fkey");
+        });
+
         modelBuilder.Entity<Imagen>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("imagen_pkey");
@@ -477,6 +568,7 @@ public partial class DBContextISLAGO : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fechapublicada");
+            entity.Property(e => e.Hash).HasColumnName("hash");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(255)
                 .HasColumnName("nombre");
@@ -574,6 +666,8 @@ public partial class DBContextISLAGO : DbContext
 
             entity.ToTable("pedido");
 
+            entity.HasIndex(e => e.Idcliente, "idx_pedido_cliente");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Deuda)
                 .HasPrecision(10, 2)
@@ -610,9 +704,8 @@ public partial class DBContextISLAGO : DbContext
                 .HasForeignKey(d => d.Idcliente)
                 .HasConstraintName("pedido_idcliente_fkey");
 
-            entity.HasOne(d => d.IdestadoNavigation).WithMany(p => p.InverseIdestadoNavigation)
+            entity.HasOne(d => d.IdestadoNavigation).WithMany(p => p.Pedidos)
                 .HasForeignKey(d => d.Idestado)
-                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("pedido_idestado_fkey");
 
             entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Pedidos)
@@ -839,7 +932,6 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Email)
                 .HasMaxLength(150)
                 .HasColumnName("email");
-            entity.Property(e => e.Idimagen).HasColumnName("idimagen");
             entity.Property(e => e.Idpersona).HasColumnName("idpersona");
             entity.Property(e => e.IntentosFallidos)
                 .HasDefaultValue(0)
@@ -852,10 +944,6 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Usarname)
                 .HasMaxLength(60)
                 .HasColumnName("usarname");
-
-            entity.HasOne(d => d.IdimagenNavigation).WithMany(p => p.Usuarios)
-                .HasForeignKey(d => d.Idimagen)
-                .HasConstraintName("fk_usuario_imagen");
 
             entity.HasOne(d => d.IdpersonaNavigation).WithOne(p => p.Usuario)
                 .HasForeignKey<Usuario>(d => d.Idpersona)
@@ -887,6 +975,8 @@ public partial class DBContextISLAGO : DbContext
 
             entity.ToTable("usuario_rol");
 
+            entity.HasIndex(e => e.Idusuario, "idx_usuario_rol_usuario");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Idrol).HasColumnName("idrol");
             entity.Property(e => e.Idusuario).HasColumnName("idusuario");
@@ -900,8 +990,32 @@ public partial class DBContextISLAGO : DbContext
                 .HasConstraintName("usuario_rol_idusuario_fkey");
         });
 
+        modelBuilder.Entity<Usuarioimagen>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("usuarioimagen_pkey");
+
+            entity.ToTable("usuarioimagen");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.EsPrincipal)
+                .HasDefaultValue(false)
+                .HasColumnName("es_principal");
+            entity.Property(e => e.Idimagen).HasColumnName("idimagen");
+            entity.Property(e => e.Idusuario).HasColumnName("idusuario");
+            entity.Property(e => e.Orden)
+                .HasDefaultValue(0)
+                .HasColumnName("orden");
+
+            entity.HasOne(d => d.IdimagenNavigation).WithMany(p => p.Usuarioimagens)
+                .HasForeignKey(d => d.Idimagen)
+                .HasConstraintName("fk_usuarioimagen_imagen");
+
+            entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Usuarioimagens)
+                .HasForeignKey(d => d.Idusuario)
+                .HasConstraintName("fk_usuarioimagen_usuario");
+        });
+
         OnModelCreatingPartial(modelBuilder);
     }
-
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

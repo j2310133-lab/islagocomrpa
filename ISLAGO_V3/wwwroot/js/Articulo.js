@@ -1,54 +1,91 @@
-﻿let categorias = [];
+﻿// =========================================
+// VARIABLES GLOBALES
+// =========================================
+
+let categorias = [];
+let editCategorias = [];
+
+let imagenesBase64 = [];
 let editImagenesBase64 = [];
-
-document.getElementById("categoriaSelect").addEventListener("change", function () {
-    const id = this.value;
-    const text = this.options[this.selectedIndex].text;
-
-    if (!id || categorias.includes(id)) return;
-
-    categorias.push(id);
-
-    const tag = document.createElement("div");
-    tag.className = "categoria-tag";
-    tag.setAttribute("data-id", id);
-
-    tag.innerHTML = `
-        ${text}
-        <i class="fas fa-times"></i>
-    `;
-
-    tag.querySelector("i").addEventListener("click", function () {
-        categorias = categorias.filter(c => c !== id);
-        tag.remove();
-    });
-
-    document.getElementById("categoriasSeleccionadas").appendChild(tag);
-
-    this.value = "";
-});
-
-// ===================================
-// Funcionalidad del proyecto
-// ===================================
-document.addEventListener("DOMContentLoaded", () => {
-    listarArticulos();
-    cargarCategorias();
-    cargarUmedidas();
-});
-
-// ===================================
-// LISTAR TABLA ARTICULO
-// Y MOSTRAR LA ULTIMA IMAGEN
-// PUBLICADA
-// ===================================
 
 let listaArticulos = [];
 
+// =========================================
+// INIT
+// =========================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await cargarCategorias();
+
+    await cargarUmedidas();
+
+    await cargarProveedores();
+
+    await listarArticulos();
+
+});
+
+// =========================================
+// SELECT CATEGORIAS CREAR
+// =========================================
+
+document.getElementById("categoriaSelect")
+    .addEventListener("change", function () {
+
+        const id = this.value;
+
+        const text =
+            this.options[this.selectedIndex].text;
+
+        if (!id || categorias.includes(id)) return;
+
+        categorias.push(id);
+
+        renderCategoriasSeleccionadas();
+
+        this.value = "";
+
+    });
+
+// =========================================
+// SELECT CATEGORIAS EDITAR
+// =========================================
+
+document.getElementById("editCategoriaSelect")
+    .addEventListener("change", function () {
+
+        const id = this.value;
+
+        const text =
+            this.options[this.selectedIndex].text;
+
+        if (!id || editCategorias.includes(id)) return;
+
+        editCategorias.push(id);
+
+        renderEditCategorias();
+
+        this.value = "";
+
+    });
+
+// =========================================
+// LISTAR ARTICULOS
+// =========================================
+
 async function listarArticulos() {
+
     try {
 
         const res = await fetch("/Articulo/Listar");
+
+        if (!res.ok) {
+            throw new Error(
+                "No se pudieron cargar los artículos."
+            );
+        }
+
         const data = await res.json();
 
         listaArticulos = data;
@@ -58,16 +95,246 @@ async function listarArticulos() {
     }
     catch (error) {
 
+        console.error(error);
+
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || "Algo salió mal"
+            icon: "error",
+            title: "Error",
+            text: error.message
         });
 
     }
+
 }
 
-// Ver descripcion
+// =========================================
+// RENDER TABLA
+// =========================================
+
+function renderArticulos(data) {
+
+    const tbody =
+        document.getElementById("tablaArticulos");
+
+    tbody.innerHTML = "";
+
+    // =========================
+    // VACIO
+    // =========================
+
+    if (!data || data.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center text-muted">
+
+                    <div style="padding:20px;">
+
+                        <i
+                            class="fas fa-search"
+                            style="font-size:20px; opacity:0.6;">
+                        </i>
+
+                        <p style="margin-top:10px;">
+                            No se encontraron artículos
+                        </p>
+
+                    </div>
+
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+    // =========================
+    // RENDER
+    // =========================
+
+    data.forEach(a => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <!-- IMAGEN -->
+            <td>
+
+                ${a.imagen
+                ? `
+                        <img
+                            src="${a.imagen}"
+                            class="img-table">
+                    `
+                : `
+                        <span>Sin imagen</span>
+                    `
+            }
+
+            </td>
+
+            <!-- PRODUCTO -->
+            <td>
+
+                <div class="d-flex flex-column">
+
+                    <strong>
+                        ${a.nombreCompleto || a.nombre || "Sin nombre"}
+                    </strong>
+
+                </div>
+
+            </td>
+
+            <!-- DESCRIPCION -->
+            <td>
+
+                ${a.descripcionCorta || ""}
+
+            </td>
+
+            <!-- STOCK -->
+            <td>
+
+                ${a.stock ?? 0}
+
+            </td>
+
+            <!-- UNIDAD -->
+            <td>
+
+                ${a.unidadMedida || "Sin unidad"}
+
+            </td>
+
+            <!-- COMPRA -->
+            <td>
+
+                C$ ${a.precioCompra ?? 0}
+
+            </td>
+
+            <!-- VENTA -->
+            <td>
+
+                C$ ${a.precioVentaMinorista ?? 0}
+
+            </td>
+
+            <!-- PROVEEDOR -->
+            <td>
+
+                ${a.proveedor || "Ferreteria Lago"}
+
+            </td>
+
+            <!-- ESTADO -->
+            <td>
+
+                <span class="badge ${a.activo
+                ? "bg-success"
+                : "bg-danger"}">
+
+                    ${a.activo
+                ? "Activo"
+                : "Inactivo"}
+
+                </span>
+
+            </td>
+
+            <!-- ACCIONES -->
+            <td>
+
+                <div class="actions-dropdown">
+
+                    <button
+                        class="actions-btn"
+                        onclick="toggleActionsMenu(this)">
+
+                        <i class="fas fa-ellipsis-v"></i>
+
+                    </button>
+
+                    <div class="actions-menu">
+
+                        ${a.descripcionCompleta &&
+                a.descripcionCompleta.length > 60
+                ? `
+                            <button
+                                class="actions-item"
+                                onclick="verDescripcion('${a.descripcionCompleta.replace(/'/g, "\\'")}')">
+
+                                <i class="fas fa-eye"></i>
+
+                                Ver descripción
+
+                            </button>
+                        `
+                : ""
+            }
+
+                        <button
+                            class="actions-item"
+                            onclick="editarArticulo(${a.id})">
+
+                            <i class="fas fa-edit"></i>
+
+                            Editar
+
+                        </button>
+
+                        <button
+                            class="actions-item"
+                            onclick="ajustarStock(${a.id})">
+
+                            <i class="fas fa-boxes"></i>
+
+                            Ajustar stock
+
+                        </button>
+
+                        <button
+                            class="actions-item"
+                            onclick="administrarImagenes(${a.id})">
+
+                            <i class="fas fa-images"></i>
+
+                            Administrar imágenes
+
+                        </button>
+
+                        <button
+                            class="actions-item danger"
+                            onclick="cambiarEstado(${a.id}, ${a.activo})">
+
+                            <i class="fas fa-trash"></i>
+
+                            ${a.activo
+                ? "Eliminar"
+                : "Restaurar"}
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+}
+
+// =========================================
+// VER DESCRIPCION
+// =========================================
+
 function verDescripcion(desc) {
 
     Swal.fire({
@@ -94,341 +361,278 @@ function verDescripcion(desc) {
 
         showConfirmButton: true,
 
-        confirmButtonText: 'Cerrar',
-
-        customClass: {
-            popup: 'descripcion-popup',
-            confirmButton: 'descripcion-btn'
-        }
+        confirmButtonText: "Cerrar"
 
     });
 
 }
 
-// Cargar categorias en MODAL
+// =========================================
+// CARGAR CATEGORIAS
+// =========================================
+
 async function cargarCategorias() {
 
-    const res = await fetch("/Articulo/ObtenerCategorias");
-    const data = await res.json();
+    try {
 
-    // =========================
-    // MODAL CREAR
-    // =========================
-    const select = document.getElementById("categoriaSelect");
-
-    select.innerHTML = `
-        <option value="">-- Seleccionar categoría --</option>
-    `;
-
-    // =========================
-    // MODAL EDITAR
-    // =========================
-    const editSelect = document.getElementById("editCategoriaSelect");
-
-    editSelect.innerHTML = `
-        <option value="">-- Seleccionar categoría --</option>
-    `;
-
-    data.forEach(c => {
-
-        // CREATE
-        const option = document.createElement("option");
-        option.value = c.id;
-        option.textContent = c.nombre;
-        select.appendChild(option);
-
-        // EDIT
-        const optionEdit = document.createElement("option");
-        optionEdit.value = c.id;
-        optionEdit.textContent = c.nombre;
-        editSelect.appendChild(optionEdit);
-
-    });
-
-}
-
-// Cargar Unidad Medida en MODAL
-async function cargarUmedidas() {
-
-    const res = await fetch("/Articulo/ObtenerUnidadesMedida");
-    const data = await res.json();
-
-    // CREAR
-    const select = document.getElementById("unidadMedida");
-
-    select.innerHTML = `
-        <option value="">-- Seleccionar unidad --</option>
-    `;
-
-    // EDITAR
-    const editSelect = document.getElementById("editUnidadMedida");
-
-    editSelect.innerHTML = `
-        <option value="">-- Seleccionar unidad --</option>
-    `;
-
-    data.forEach(u => {
-
-        // CREAR
-        const option = document.createElement("option");
-        option.value = u.id;
-        option.textContent = u.nombre;
-        select.appendChild(option);
-
-        // EDITAR
-        const optionEdit = document.createElement("option");
-        optionEdit.value = u.id;
-        optionEdit.textContent = u.nombre;
-        editSelect.appendChild(optionEdit);
-
-    });
-
-}
-
-// ===================================
-// BUSCADOR
-// ===================================
-
-//Creamos render antes de buscar para listar mientras se busca el articulo.
-async function renderArticulos(data) {
-    const tbody = document.getElementById("tablaArticulos");
-    tbody.innerHTML = "";
-
-    // Mensaje por si no hay resultado.
-    if (!data || data.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center text-muted">
-                    <div style="padding:20px;">
-                        <i class="fas fa-search" style="font-size:20px; opacity:0.6;"></i>
-                        <p style="margin-top:10px;">
-                            No se encontraron artículos con ese criterio
-                        </p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    data.forEach(a => {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-            <td>
-                ${a.imagen
-                ? `<img src="${a.imagen}" class="img-table">`
-                : `<span>Sin Imagen</span>`}
-            </td>
-
-            <td>${a.nombre}</td>
-
-            <td>
-                ${a.descripcionCorta || ""}
-                
-            </td>
-
-            <td>C$ ${a.precio}</td>
-            <td>${a.stock}</td>
-            <td>${a.umedidum}</td>
-
-            <td>
-                <span class="badge ${a.activo ? 'bg-success' : 'bg-danger'}">
-                    ${a.activo ? 'Activo' : 'Inactivo'}
-                </span>
-            </td>
-
-            <td>
-
-                <div class="actions-dropdown">
-
-                    <button
-                        class="actions-btn"
-                        onclick="toggleActionsMenu(this)">
-
-                        <i class="fas fa-ellipsis-v"></i>
-
-                    </button>
-
-                    <div class="actions-menu">
-
-                        ${a.descripcionCompleta && a.descripcionCompleta.length > 60
-                            ? `
-                            <button
-                                class="actions-item"
-                                onclick="verDescripcion('${a.descripcionCompleta.replace(/'/g, "\\'")}')">
-
-                                <i class="fas fa-eye"></i>
-                                Ver descripción
-
-                            </button>
-                            `
-                            : ""}
-
-                        <button
-                            class="actions-item"
-                            onclick="editarArticulo(${a.id})">
-
-                            <i class="fas fa-edit"></i>
-                            Editar
-
-                        </button>
-
-                        <button
-                            class="actions-item"
-                            onclick="ajustarStock(${a.id})">
-
-                            <i class="fas fa-boxes"></i>
-                            Ajustar stock
-
-                        </button>
-
-                        <button
-                            class="actions-item"
-                            onclick="administrarImagenes(${a.id})">
-
-                            <i class="fas fa-images"></i>
-                            Administrar imágenes
-
-                        </button>
-
-                        <button
-                            class="actions-item danger"
-                            onclick="cambiarEstado(${a.id}, ${a.activo})">
-
-                            <i class="fas fa-trash"></i>
-
-                            ${a.activo ? 'Eliminar' : 'Restaurar'}
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-}
-
-// Creamos funcion de buscar
-document.getElementById("buscadorArticulos").addEventListener("input", function () {
-    const filtro = this.value.toLowerCase().trim();
-
-    if (!filtro) {
-        renderArticulos(listaArticulos);
-        return;
-    }
-
-    const filtrados = listaArticulos.filter(a =>
-        (a.nombre && a.nombre.toLowerCase().includes(filtro)) ||
-        (a.descripcionCompleta && a.descripcionCompleta.toLowerCase().includes(filtro))
-    );
-
-    renderArticulos(filtrados);
-});
-
-// =================================================
-// Capturamos Imagenes y convertirla a string
-// =================================================
-let imagenesBase64 = [];
-
-document.getElementById("inputImagenes").addEventListener("change", function () {
-    const files = this.files;
-    imagenesBase64 = [];
-
-    const preview = document.getElementById("preview");
-    preview.innerHTML = "";
-
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-
-            imagenesBase64.push(e.target.result);
-
-            const img = document.createElement("img");
-            img.src = e.target.result;
-            img.className = "preview-img"
-
-            preview.appendChild(img);
-
-        };
-
-        reader.readAsDataURL(file);
-    });
-});
-
-// ===============================
-// Crear Articulo
-// ===============================
-document.getElementById("btnGuardar").addEventListener("click", async function () {
-
-    try{
-
-        const data = {
-            nombre: document.getElementById("nombre").value,
-            descripcion: document.getElementById("descripcion").value,
-            precio: parseFloat(document.getElementById("precio").value),
-            stock: parseInt(document.getElementById("stock").value),
-            activo: document.getElementById("activo").value === "true",
-            idumedida: parseInt(document.getElementById("unidadMedida").value),
-
-            categoriasId: categorias,
-            imagenesBase64: imagenesBase64
-        };
-
-        const res = await fetch("/Articulo/Crear", {
-            method: "post",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await res.json();
+        const res =
+            await fetch("/Articulo/ObtenerCategorias");
 
         if (!res.ok) {
-            return Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: result.message || 'Error al guardar.',
-            });
+            throw new Error(
+                "No se pudieron cargar las categorías."
+            );
         }
 
-        await Swal.fire({
-            icon: 'success',
-            title: 'Éxito',
-            text: 'Se ha guardado con exito el articulo',
-            timer: 2000,
-            showConfirmButton: false
+        const data = await res.json();
+
+        const select =
+            document.getElementById("categoriaSelect");
+
+        const editSelect =
+            document.getElementById("editCategoriaSelect");
+
+        select.innerHTML = `
+            <option value="">
+                -- Seleccionar categoría --
+            </option>
+        `;
+
+        editSelect.innerHTML = `
+            <option value="">
+                -- Seleccionar categoría --
+            </option>
+        `;
+
+        data.forEach(c => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = c.id;
+
+            option.textContent = c.nombre;
+
+            select.appendChild(option);
+
+            const optionEdit =
+                document.createElement("option");
+
+            optionEdit.value = c.id;
+
+            optionEdit.textContent = c.nombre;
+
+            editSelect.appendChild(optionEdit);
+
         });
 
-        //cerrar modal
-        $("#modalArticulo").modal("hide");
+    }
+    catch (error) {
 
-        //recargar tablas
-        listarArticulos();
+        console.error(error);
 
     }
-    catch(error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Error al tratar de guardar revise bien los campos o comente con soporte.'
+
+}
+
+// =========================================
+// CARGAR UNIDADES
+// =========================================
+
+async function cargarUmedidas() {
+
+    try {
+
+        const res =
+            await fetch("/Articulo/ObtenerUnidadesMedida");
+
+        if (!res.ok) {
+            throw new Error(
+                "No se pudieron cargar las unidades."
+            );
+        }
+
+        const data = await res.json();
+
+        const select =
+            document.getElementById("unidadMedida");
+
+        const editSelect =
+            document.getElementById("editUnidadMedida");
+
+        select.innerHTML = `
+            <option value="">
+                -- Seleccionar unidad --
+            </option>
+        `;
+
+        editSelect.innerHTML = `
+            <option value="">
+                -- Seleccionar unidad --
+            </option>
+        `;
+
+        data.forEach(u => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = u.id;
+
+            option.textContent = u.nombre;
+
+            select.appendChild(option);
+
+            const optionEdit =
+                document.createElement("option");
+
+            optionEdit.value = u.id;
+
+            optionEdit.textContent = u.nombre;
+
+            editSelect.appendChild(optionEdit);
+
         });
+
+    }
+    catch (error) {
+
+        console.error(error);
+
     }
 
-});
+}
 
-// ==========================
-// EDITAR
-// ==========================
+// =========================================
+// CARGAR PROVEEDORES
+// =========================================
+
+async function cargarProveedores() {
+
+    try {
+
+        const res =
+            await fetch("/Articulo/ObtenerProveedores");
+
+        if (!res.ok) {
+
+            console.warn(
+                "No existen proveedores todavía."
+            );
+
+            return;
+
+        }
+
+        const data = await res.json();
+
+        const select =
+            document.getElementById("proveedor");
+
+        const editSelect =
+            document.getElementById("editProveedor");
+
+        select.innerHTML = `
+            <option value="">
+                -- Seleccionar proveedor --
+            </option>
+        `;
+
+        editSelect.innerHTML = `
+            <option value="">
+                -- Seleccionar proveedor --
+            </option>
+        `;
+
+        data.forEach(p => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = p.id;
+
+            option.textContent = p.nombre;
+
+            select.appendChild(option);
+
+            const optionEdit =
+                document.createElement("option");
+
+            optionEdit.value = p.id;
+
+            optionEdit.textContent = p.nombre;
+
+            editSelect.appendChild(optionEdit);
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+// =========================================
+// RENDER CATEGORIAS CREAR
+// =========================================
+
+function renderCategoriasSeleccionadas() {
+
+    const container =
+        document.getElementById(
+            "categoriasSeleccionadas"
+        );
+
+    container.innerHTML = "";
+
+    categorias.forEach(cat => {
+
+        const option = document.querySelector(
+            `#categoriaSelect option[value="${cat}"]`
+        );
+
+        const nombre =
+            option?.textContent || "Categoria";
+
+        container.innerHTML += `
+            <div class="categoria-tag">
+
+                ${nombre}
+
+                <i
+                    class="fas fa-times"
+                    onclick="eliminarCategoria('${cat}')">
+                </i>
+
+            </div>
+        `;
+
+    });
+
+}
+
+function eliminarCategoria(id) {
+
+    categorias =
+        categorias.filter(c => c != id);
+
+    renderCategoriasSeleccionadas();
+
+}
+
+// =========================================
+// RENDER CATEGORIAS EDIT
+// =========================================
+
 function renderEditCategorias() {
 
-    const container = document.getElementById("editCategoriasSeleccionadas");
+    const container =
+        document.getElementById(
+            "editCategoriasSeleccionadas"
+        );
 
     container.innerHTML = "";
 
@@ -438,7 +642,8 @@ function renderEditCategorias() {
             `#editCategoriaSelect option[value="${cat}"]`
         );
 
-        const nombre = option?.textContent || "Categoria";
+        const nombre =
+            option?.textContent || "Categoria";
 
         container.innerHTML += `
             <div class="categoria-tag">
@@ -457,28 +662,67 @@ function renderEditCategorias() {
 
 }
 
-document.getElementById("editCategoriaSelect")
-    .addEventListener("change", function () {
-        const id = this.value;
-        const text = this.options[this.selectedIndex].text;
+function eliminarCategoriaEdit(id) {
 
-        if (!id || editCategorias.includes(id)) return;
+    editCategorias =
+        editCategorias.filter(c => c != id);
 
-        editCategorias.push(id);
+    renderEditCategorias();
 
-        renderEditCategorias();
+}
 
-        this.value = "";
+// =========================================
+// BUSCADOR
+// =========================================
+
+document.getElementById("buscadorArticulos")
+    .addEventListener("input", function () {
+
+        const filtro =
+            this.value.toLowerCase().trim();
+
+        if (!filtro) {
+
+            renderArticulos(listaArticulos);
+
+            return;
+
+        }
+
+        const filtrados =
+            listaArticulos.filter(a =>
+
+                (a.nombreCompleto &&
+                    a.nombreCompleto
+                        .toLowerCase()
+                        .includes(filtro))
+
+                ||
+
+                (a.descripcionCompleta &&
+                    a.descripcionCompleta
+                        .toLowerCase()
+                        .includes(filtro))
+
+            );
+
+        renderArticulos(filtrados);
+
     });
 
-document.getElementById("editInputImagenes")
+// =========================================
+// IMAGENES CREAR
+// =========================================
+
+document.getElementById("inputImagenes")
     .addEventListener("change", function () {
 
         const files = this.files;
 
-        editImagenesBase64 = [];
+        imagenesBase64 = [];
 
-        const preview = document.getElementById("editPreviewNuevas");
+        const preview =
+            document.getElementById("preview");
 
         preview.innerHTML = "";
 
@@ -488,13 +732,15 @@ document.getElementById("editInputImagenes")
 
             reader.onload = function (e) {
 
-                editImagenesBase64.push(e.target.result);
+                imagenesBase64.push(
+                    e.target.result
+                );
 
                 preview.innerHTML += `
-                <img
-                    src="${e.target.result}"
-                    class="preview-img">
-            `;
+                    <img
+                        src="${e.target.result}"
+                        class="preview-img">
+                `;
 
             };
 
@@ -504,48 +750,238 @@ document.getElementById("editInputImagenes")
 
     });
 
+// =========================================
+// IMAGENES EDITAR
+// =========================================
+
+document.getElementById("editInputImagenes")
+    .addEventListener("change", function () {
+
+        const files = this.files;
+
+        editImagenesBase64 = [];
+
+        const preview =
+            document.getElementById(
+                "editPreviewNuevas"
+            );
+
+        preview.innerHTML = "";
+
+        Array.from(files).forEach(file => {
+
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+
+                editImagenesBase64.push(
+                    e.target.result
+                );
+
+                preview.innerHTML += `
+                    <img
+                        src="${e.target.result}"
+                        class="preview-img">
+                `;
+
+            };
+
+            reader.readAsDataURL(file);
+
+        });
+
+    });
+
+// =========================================
+// CREAR
+// =========================================
+
+document.getElementById("btnGuardar")
+    .addEventListener("click", async function () {
+
+        try {
+
+            const data = {
+
+                nombre:
+                    document.getElementById("nombre").value,
+
+                descripcion:
+                    document.getElementById("descripcion").value,
+
+                marca:
+                    document.getElementById("marca").value,
+
+                sku:
+                    document.getElementById("sku").value,
+
+                precioCompra:
+                    parseFloat(
+                        document.getElementById("precioCompra").value
+                    ) || 0,
+
+                precioVentaMinorista:
+                    parseFloat(
+                        document.getElementById("precioMinorista").value
+                    ) || 0,
+
+                precioVentaMayorista:
+                    parseFloat(
+                        document.getElementById("precioMayorista").value
+                    ) || 0,
+
+                stockMinimo:
+                    parseInt(
+                        document.getElementById("stockMinimo").value
+                    ) || 0,
+
+                idproveedor:
+                    parseInt(
+                        document.getElementById("proveedor").value
+                    ) || null,
+
+                stock:
+                    parseInt(
+                        document.getElementById("stock").value
+                    ) || 0,
+
+                activo:
+                    document.getElementById("activo").value === "true",
+
+                idumedida:
+                    parseInt(
+                        document.getElementById("unidadMedida").value
+                    ) || null,
+
+                categoriasId: categorias,
+
+                imagenesBase64: imagenesBase64
+
+            };
+
+            const res = await fetch(
+                "/Articulo/Crear",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify(data)
+                }
+            );
+
+            const result = await res.json();
+
+            if (!res.ok) {
+
+                throw new Error(
+                    result.message ||
+                    "Error al guardar."
+                );
+
+            }
+
+            await Swal.fire({
+                icon: "success",
+                title: "Éxito",
+                text:
+                    "Artículo creado correctamente",
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            $("#modalArticulo").modal("hide");
+
+            listarArticulos();
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message
+            });
+
+        }
+
+    });
+
+// =========================================
+// EDITAR
+// =========================================
+
 async function editarArticulo(id) {
 
     try {
 
-        const res = await fetch(`/Articulo/ObtenerPorId?id=${id}`);
+        const res =
+            await fetch(
+                `/Articulo/ObtenerPorId?id=${id}`
+            );
 
         const articulo = await res.json();
 
         if (!res.ok) {
-            throw new Error(articulo.message);
+            throw new Error(
+                articulo.message
+            );
         }
 
-        // ==========================
-        // ABRIR MODAL
-        // ==========================
+        $("#modalEditarArticulo")
+            .modal("show");
 
-        $("#modalEditarArticulo").modal("show");
-
-        // ==========================
+        // =====================
         // INPUTS
-        // ==========================
+        // =====================
 
-        document.getElementById("editIdArticulo").value = articulo.id;
+        document.getElementById("editIdArticulo").value =
+            articulo.id;
 
-        document.getElementById("editNombre").value = articulo.nombre;
+        document.getElementById("editNombre").value =
+            articulo.nombre || "";
 
         document.getElementById("editDescripcion").value =
             articulo.descripcion || "";
 
-        document.getElementById("editPrecio").value = articulo.precio;
+        document.getElementById("editMarca").value =
+            articulo.marca || "";
 
-        document.getElementById("editStock").value = articulo.stock;
+        document.getElementById("editSku").value =
+            articulo.sku || "";
+
+        document.getElementById("editPrecioCompra").value =
+            articulo.precioCompra || 0;
+
+        document.getElementById("editPrecioMinorista").value =
+            articulo.precioVentaMinorista || 0;
+
+        document.getElementById("editPrecioMayorista").value =
+            articulo.precioVentaMayorista || 0;
+
+        document.getElementById("editStockMinimo").value =
+            articulo.stockMinimo || 0;
+
+        document.getElementById("editProveedor").value =
+            articulo.idproveedor || "";
+
+        document.getElementById("editStock").value =
+            articulo.stock || 0;
 
         document.getElementById("editUnidadMedida").value =
-            articulo.idumedida;
+            articulo.idumedida || "";
 
         document.getElementById("editActivo").value =
             articulo.activo.toString();
 
-        // ==========================
+        // =====================
         // CATEGORIAS
-        // ==========================
+        // =====================
 
         editCategorias = [];
 
@@ -553,7 +989,9 @@ async function editarArticulo(id) {
 
             articulo.categorias.forEach(cat => {
 
-                editCategorias.push(cat.idcategoria.toString());
+                editCategorias.push(
+                    cat.idcategoria.toString()
+                );
 
             });
 
@@ -561,17 +999,18 @@ async function editarArticulo(id) {
 
         renderEditCategorias();
 
-        // ==========================
-        // IMAGENES ACTUALES
-        // ==========================
+        // =====================
+        // IMAGENES
+        // =====================
 
-        const preview = document.getElementById("editPreview");
+        const preview =
+            document.getElementById("editPreview");
 
         preview.innerHTML = "";
 
-        if (articulo.imagen) {
+        if (articulo.imagenes) {
 
-            articulo.imagen.forEach(img => {
+            articulo.imagenes.forEach(img => {
 
                 preview.innerHTML += `
                     <div class="preview-edit-card">
@@ -589,9 +1028,11 @@ async function editarArticulo(id) {
     }
     catch (error) {
 
+        console.error(error);
+
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
+            icon: "error",
+            title: "Error",
             text: error.message
         });
 
@@ -599,15 +1040,10 @@ async function editarArticulo(id) {
 
 }
 
-function eliminarCategoriaEdit(id) {
+// =========================================
+// ACTUALIZAR
+// =========================================
 
-    editCategorias = editCategorias.filter(c => c != id);
-
-    renderEditCategorias();
-
-}
-
-//Guardar cambios
 document.getElementById("btnActualizarArticulo")
     .addEventListener("click", async function () {
 
@@ -615,72 +1051,115 @@ document.getElementById("btnActualizarArticulo")
 
             const data = {
 
-                id: parseInt(
-                    document.getElementById("editIdArticulo").value
-                ),
+                id:
+                    parseInt(
+                        document.getElementById("editIdArticulo").value
+                    ),
 
-                nombre: document.getElementById("editNombre").value,
+                nombre:
+                    document.getElementById("editNombre").value,
 
                 descripcion:
                     document.getElementById("editDescripcion").value,
 
-                precio: parseFloat(
-                    document.getElementById("editPrecio").value
-                ),
+                marca:
+                    document.getElementById("editMarca").value,
 
-                stock: parseInt(
-                    document.getElementById("editStock").value
-                ),
+                sku:
+                    document.getElementById("editSku").value,
 
-                idumedida: parseInt(
-                    document.getElementById("editUnidadMedida").value
-                ),
+                precioCompra:
+                    parseFloat(
+                        document.getElementById("editPrecioCompra").value
+                    ) || 0,
+
+                precioVentaMinorista:
+                    parseFloat(
+                        document.getElementById("editPrecioMinorista").value
+                    ) || 0,
+
+                precioVentaMayorista:
+                    parseFloat(
+                        document.getElementById("editPrecioMayorista").value
+                    ) || 0,
+
+                stockMinimo:
+                    parseInt(
+                        document.getElementById("editStockMinimo").value
+                    ) || 0,
+
+                idproveedor:
+                    parseInt(
+                        document.getElementById("editProveedor").value
+                    ) || null,
+
+                stock:
+                    parseInt(
+                        document.getElementById("editStock").value
+                    ) || 0,
+
+                idumedida:
+                    parseInt(
+                        document.getElementById("editUnidadMedida").value
+                    ) || null,
 
                 activo:
                     document.getElementById("editActivo").value === "true",
 
-                categoriasId: editCategorias,
+                categoriasId:
+                    editCategorias,
 
-                imagenesBase64: editImagenesBase64
+                imagenesBase64:
+                    editImagenesBase64
 
             };
 
-            const res = await fetch("/Articulo/Actualizar", {
+            const res = await fetch(
+                "/Articulo/Actualizar",
+                {
+                    method: "PUT",
 
-                method: "PUT",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify(data)
-
-            });
+                    body: JSON.stringify(data)
+                }
+            );
 
             const result = await res.json();
 
             if (!res.ok) {
-                throw new Error(result.message);
+
+                throw new Error(
+                    result.message
+                );
+
             }
 
             await Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: 'Artículo actualizado correctamente',
+                icon: "success",
+                title: "Éxito",
+                text:
+                    "Artículo actualizado correctamente",
                 timer: 1800,
                 showConfirmButton: false
             });
 
-            $("#modalEditarArticulo").modal("hide");
+            $("#modalEditarArticulo")
+                .modal("hide");
 
             listarArticulos();
 
         }
         catch (error) {
 
+            console.error(error);
+
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
+                icon: "error",
+                title: "Error",
                 text: error.message
             });
 
@@ -688,57 +1167,67 @@ document.getElementById("btnActualizarArticulo")
 
     });
 
-// =============================
-// Funcion CambiarEstado
-// =============================
+// =========================================
+// CAMBIAR ESTADO
+// =========================================
+
 async function cambiarEstado(id, activoActual) {
 
     const nuevoEstado = !activoActual;
 
-    const confirmacion = await Swal.fire({
-        title: nuevoEstado ? 'Restaurar artículo' : 'Eliminar artículo',
+    const confirmacion =
+        await Swal.fire({
 
-        text: nuevoEstado
-            ? '¿Deseas restaurar este artículo?'
-            : '¿Deseas eliminar este artículo?',
+            title:
+                nuevoEstado
+                    ? "Restaurar artículo"
+                    : "Eliminar artículo",
 
-        icon: 'warning',
-        showCancelButton: true,
+            text:
+                nuevoEstado
+                    ? "¿Deseas restaurar este artículo?"
+                    : "¿Deseas eliminar este artículo?",
 
-        confirmButtonText: nuevoEstado
-            ? 'Sí, restaurar'
-            : 'Sí, eliminar',
+            icon: "warning",
 
-        cancelButtonText: 'Cancelar',
+            showCancelButton: true,
 
-        confirmButtonColor: nuevoEstado
-            ? '#28a745'
-            : '#d33'
-    });
+            confirmButtonText:
+                nuevoEstado
+                    ? "Sí, restaurar"
+                    : "Sí, eliminar",
+
+            cancelButtonText:
+                "Cancelar"
+
+        });
 
     if (!confirmacion.isConfirmed) return;
 
     try {
 
-        const res = await fetch(`/Articulo/CambiarEstado?id=${id}&activo=${nuevoEstado}`, {
-            method: 'PUT'
-        });
+        const res =
+            await fetch(
+                `/Articulo/CambiarEstado?id=${id}&activo=${nuevoEstado}`,
+                {
+                    method: "PUT"
+                }
+            );
 
         const result = await res.json();
 
         if (!res.ok) {
-            throw new Error(result.message);
+
+            throw new Error(
+                result.message
+            );
+
         }
 
         await Swal.fire({
-            icon: 'success',
-
-            title: 'Éxito',
-
-            text: nuevoEstado
-                ? 'Artículo restaurado correctamente'
-                : 'Artículo eliminado correctamente',
-
+            icon: "success",
+            title: "Éxito",
+            text: result.message,
             timer: 1800,
             showConfirmButton: false
         });
@@ -748,42 +1237,61 @@ async function cambiarEstado(id, activoActual) {
     }
     catch (error) {
 
+        console.error(error);
+
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
+            icon: "error",
+            title: "Error",
             text: error.message
         });
 
     }
+
 }
 
-// =====================================
+// =========================================
 // MENU ACCIONES
-// =====================================
+// =========================================
 
 function toggleActionsMenu(button) {
 
-    // cerrar otros
-    document.querySelectorAll(".actions-menu").forEach(menu => {
+    document
+        .querySelectorAll(".actions-menu")
+        .forEach(menu => {
 
-        if (menu !== button.nextElementSibling) {
-            menu.classList.remove("show");
-        }
+            if (
+                menu !==
+                button.nextElementSibling
+            ) {
 
-    });
+                menu.classList.remove("show");
 
-    // abrir actual
-    button.nextElementSibling.classList.toggle("show");
+            }
+
+        });
+
+    button.nextElementSibling
+        .classList.toggle("show");
+
 }
 
-// cerrar al hacer click afuera
+// =========================================
+// CERRAR MENU
+// =========================================
+
 document.addEventListener("click", function (e) {
 
-    if (!e.target.closest(".actions-dropdown")) {
+    if (
+        !e.target.closest(".actions-dropdown")
+    ) {
 
-        document.querySelectorAll(".actions-menu").forEach(menu => {
-            menu.classList.remove("show");
-        });
+        document
+            .querySelectorAll(".actions-menu")
+            .forEach(menu => {
+
+                menu.classList.remove("show");
+
+            });
 
     }
 
