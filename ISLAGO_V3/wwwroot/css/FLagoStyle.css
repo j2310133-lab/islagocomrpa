@@ -216,3 +216,121 @@ body {
         justify-content: space-between;
     }
 }
+
+/* ========================================= */
+/* =============== LOADER ================== */
+/* ========================================= */
+
+#page-loader {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(244, 246, 249, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 999999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+    /* HIDDEN */
+
+    #page-loader.hide {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+/* CONTENT */
+
+.loader-wrapper {
+    text-align: center;
+    padding: 20px;
+}
+
+/* CIRCLE */
+
+.loader-circle {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: auto;
+    margin-bottom: 25px;
+}
+
+/* SVG */
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-bg {
+    fill: transparent;
+    stroke: rgba(31, 122, 99, 0.1);
+    stroke-width: 10;
+}
+
+.progress-ring-fill {
+    fill: transparent;
+    stroke: var(--green-main);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 377;
+    stroke-dashoffset: 377;
+    transition: stroke-dashoffset 0.25s linear;
+}
+
+/* PERCENT */
+
+.loader-percent {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green-main);
+}
+
+/* TEXT */
+
+.loader-wrapper h2 {
+    font-size: clamp(24px, 3vw, 34px);
+    color: var(--green-dark);
+    margin-bottom: 10px;
+}
+
+.loader-wrapper p {
+    color: #666;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:768px) {
+
+    .loader-circle {
+        width: 120px;
+        height: 120px;
+    }
+
+    .progress-ring {
+        width: 120px;
+        height: 120px;
+    }
+
+    .loader-percent {
+        font-size: 24px;
+    }
+
+    .loader-wrapper h2 {
+        font-size: 24px;
+    }
+
+    .loader-wrapper p {
+        font-size: 14px;
+    }
+}
