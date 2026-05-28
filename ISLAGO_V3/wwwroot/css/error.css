@@ -1,0 +1,243 @@
+﻿:root {
+    --green-main: #1f7a63;
+    --green-dark: #145a4a;
+    --green-light: #e8f5f1;
+}
+
+/* ===== PAGE ===== */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background: #f4f6f9;
+}
+
+/* ===== CONTAINER ===== */
+
+.error-container {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+/* ===== CARD ===== */
+
+.error-card {
+    width: 100%;
+    max-width: 720px;
+    background: white;
+    border-radius: 24px;
+    padding: clamp(30px, 5vw, 60px);
+    text-align: center;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+    border-top: 6px solid var(--green-main);
+    animation: fadeIn 0.4s ease;
+}
+
+/* ===== ICON ===== */
+
+.error-icon {
+    width: clamp(80px, 10vw, 110px);
+    height: clamp(80px, 10vw, 110px);
+    margin: auto;
+    margin-bottom: 25px;
+    background: var(--green-light);
+    color: var(--green-main);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(32px, 4vw, 45px);
+}
+
+/* ===== ERROR CODE ===== */
+
+.error-code {
+    display: inline-block;
+    background: rgba(31, 122, 99, 0.1);
+    color: var(--green-main);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: clamp(12px, 1vw, 15px);
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+/* ===== TITLE ===== */
+
+.error-card h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    color: #1f2937;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+/* ===== TEXT ===== */
+
+.error-card p {
+    color: #666;
+    font-size: clamp(15px, 1.3vw, 18px);
+    line-height: 1.8;
+    margin-bottom: 35px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ===== ACTIONS ===== */
+
+.error-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* ===== BUTTONS ===== */
+
+.btn-home,
+.btn-back {
+    border: none;
+    min-width: 180px;
+    padding: 15px 25px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+}
+
+/* PRIMARY */
+
+.btn-home {
+    background: var(--green-main);
+    color: white;
+}
+
+    .btn-home:hover {
+        background: var(--green-dark);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+/* SECONDARY */
+
+.btn-back {
+    background: #edf2f7;
+    color: #333;
+}
+
+    .btn-back:hover {
+        background: #dfe6ee;
+        transform: translateY(-2px);
+    }
+
+/* ===== ANIMATION ===== */
+
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================= */
+/* ============== MOBILE =================== */
+/* ========================================= */
+
+@media (max-width: 576px) {
+
+    .error-container {
+        padding: 18px;
+        align-items: center;
+    }
+
+    .error-card {
+        border-radius: 18px;
+        padding: 30px 20px;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .btn-home,
+    .btn-back {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .error-card p {
+        line-height: 1.6;
+    }
+}
+
+/* ========================================= */
+/* ============== TABLET =================== */
+/* ========================================= */
+
+@media (min-width: 577px) and (max-width: 991px) {
+
+    .error-card {
+        max-width: 85%;
+    }
+}
+
+/* ========================================= */
+/* ============== LARGE SCREENS ============ */
+/* ========================================= */
+
+@media (min-width: 1600px) {
+
+    .error-card {
+        max-width: 850px;
+    }
+
+        .error-card p {
+            max-width: 700px;
+        }
+}
+
+/* ========================================= */
+/* ======= VERY SHORT HEIGHT SCREENS ======= */
+/* ========================================= */
+
+@media (max-height: 700px) {
+
+    .error-container {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
+    .error-card {
+        padding-top: 30px;
+        padding-bottom: 30px;
+    }
+
+    .error-icon {
+        margin-bottom: 15px;
+    }
+
+    .error-card p {
+        margin-bottom: 25px;
+    }
+}

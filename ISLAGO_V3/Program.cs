@@ -29,7 +29,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.UseStatusCodePagesWithReExecute("/Error/Index");
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 
 app.MapControllerRoute(

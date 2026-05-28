@@ -1,99 +1,101 @@
 ﻿@{
     Layout = null;
+
+    ViewData["Title"] = "Error del sistema";
+
+    var codigo = ViewBag.StatusCode ?? 404;
+
+    string titulo = "Módulo no disponible";
+    string mensaje = "Este módulo aún no ha sido construido o contiene errores pendientes por corregir.";
+
+    if (codigo == 403)
+    {
+        titulo = "Acceso denegado";
+        mensaje = "No tienes permisos para acceder a este recurso.";
+    }
+
+    if (codigo == 500)
+    {
+        titulo = "Error interno";
+        mensaje = "Ocurrió un problema interno en el sistema.";
+    }
 }
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Módulo en construcción</title>
+    <title>@ViewData["Title"]</title>
 
-    <style>
-            *{
-                margin:0;
-                padding:0;
-                box-sizing:border-box;
-            }
+    <!-- GOOGLE FONT -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-            body{
-                font-family:Arial, Helvetica, sans-serif;
-                background:#0f172a;
-                color:white;
-                height:100vh;
-                display:flex;
-                justify-content:center;
-                align-items:center;
-                padding:20px;
-            }
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-            .container{
-                text-align:center;
-                max-width:700px;
-            }
+    <!-- CSS GLOBAL -->
+    <link rel="stylesheet"
+          href="~/css/FLagoStyle.css"
+          asp-append-version="true" />
 
-            h1{
-                font-size:4rem;
-                margin-bottom:20px;
-                color:#38bdf8;
-            }
+    <!-- CSS ERROR -->
+    <link rel="stylesheet"
+          href="~/css/error.css"
+          asp-append-version="true" />
 
-            p{
-                font-size:1.2rem;
-                line-height:1.8;
-                opacity:0.9;
-            }
-
-            .btn{
-                margin-top:30px;
-                display:inline-block;
-                padding:14px 30px;
-                background:#38bdf8;
-                color:black;
-                text-decoration:none;
-                border-radius:10px;
-                font-weight:bold;
-                transition:0.3s;
-            }
-
-            .btn:hover{
-                background:white;
-            }
-
-            @@media(max-width:768px){
-
-                h1{
-                    font-size:2.5rem;
-                }
-
-                p{
-                    font-size:1rem;
-                }
-            }
-
-    </style>
 </head>
+
 <body>
 
-    <div class="container">
+    <div class="error-container">
 
-        <h1>🚧 Módulo en construcción</h1>
+        <div class="error-card">
 
-        <p>
-            Este módulo aún no ha sido desarrollado
-            o se encuentra en mantenimiento.
-        </p>
+            <div class="error-icon">
 
-        <p>
-            Estamos trabajando para habilitarlo lo antes posible.
-        </p>
+                <i class="fas fa-triangle-exclamation"></i>
 
-        <a href="/" class="btn">
-            Volver al inicio
-        </a>
+            </div>
+
+            <span class="error-code">
+                ERROR @codigo
+            </span>
+
+            <h1>@titulo</h1>
+
+            <p>
+                @mensaje
+            </p>
+
+            <div class="error-actions">
+
+                <a href="/" class="btn-home">
+
+                    <i class="fas fa-house"></i>
+
+                    Volver al inicio
+
+                </a>
+
+                <button class="btn-back" onclick="goBack()">
+
+                    <i class="fas fa-arrow-left"></i>
+
+                    Regresar
+
+                </button>
+
+            </div>
+
+        </div>
 
     </div>
+
+    <script src="~/js/error.js" asp-append-version="true"></script>
 
 </body>
 </html>
