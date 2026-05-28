@@ -793,6 +793,51 @@ document.getElementById("editInputImagenes")
     });
 
 // =========================================
+// NORMALIZAR FRACCIONES
+// =========================================
+
+function normalizarFracciones(texto) {
+
+    if (!texto) return texto;
+
+    return texto
+
+        // 1 y media
+        .replace(/(\d+)\s+y\s+media/gi, "$1½")
+
+        // 1 y cuarto
+        .replace(/(\d+)\s+y\s+cuarto/gi, "$1¼")
+
+        // 1 y tres cuartos
+        .replace(/(\d+)\s+y\s+tres\s+cuartos/gi, "$1¾")
+
+        // 1 1/2
+        .replace(/(\d+)\s+1\/2/g, "$1½")
+
+        // 1 1/4
+        .replace(/(\d+)\s+1\/4/g, "$1¼")
+
+        // 1 3/4
+        .replace(/(\d+)\s+3\/4/g, "$1¾")
+
+        // SOLO media
+        .replace(/\bmedia\b/gi, "½")
+
+        // SOLO cuarto
+        .replace(/\bcuarto\b/gi, "¼")
+
+        // SOLO 3/4
+        .replace(/\b3\/4\b/g, "¾")
+
+        // SOLO 1/2
+        .replace(/\b1\/2\b/g, "½")
+
+        // SOLO 1/4
+        .replace(/\b1\/4\b/g, "¼");
+
+}
+
+// =========================================
 // CREAR
 // =========================================
 
@@ -804,13 +849,19 @@ document.getElementById("btnGuardar")
             const data = {
 
                 nombre:
-                    document.getElementById("nombre").value,
+                    normalizarFracciones(
+                        document.getElementById("nombre").value
+                    ),
 
                 descripcion:
-                    document.getElementById("descripcion").value,
+                    normalizarFracciones(
+                        document.getElementById("descripcion").value
+                    ),
 
                 marca:
-                    document.getElementById("marca").value,
+                    normalizarFracciones(
+                        document.getElementById("marca").value
+                    ),
 
                 sku:
                     document.getElementById("sku").value,
@@ -858,6 +909,34 @@ document.getElementById("btnGuardar")
                 imagenesBase64: imagenesBase64
 
             };
+
+            // =========================
+            // VALIDAR DUPLICADOS
+            // =========================
+
+            const existe = listaArticulos.some(a =>
+
+                a.nombreCompleto?.trim().toLowerCase()
+                === `${data.nombre} ${data.marca}`.trim().toLowerCase()
+
+                ||
+
+                (
+                    a.sku &&
+                    data.sku &&
+                    a.sku.trim().toLowerCase()
+                    === data.sku.trim().toLowerCase()
+                )
+
+            );
+
+            if (existe) {
+
+                throw new Error(
+                    "Ya existe un artículo con ese nombre/marca o SKU."
+                );
+
+            }
 
             const res = await fetch(
                 "/Articulo/Crear",
@@ -911,6 +990,70 @@ document.getElementById("btnGuardar")
         }
 
     });
+
+// =========================================
+// LIMPIAR MODAL CREAR
+// =========================================
+
+function limpiarModalCrear() {
+
+    // =========================
+    // INPUTS
+    // =========================
+
+    document.getElementById("nombre").value = "";
+
+    document.getElementById("descripcion").value = "";
+
+    document.getElementById("marca").value = "";
+
+    document.getElementById("sku").value = "";
+
+    document.getElementById("stock").value = "";
+
+    document.getElementById("stockMinimo").value = "";
+
+    document.getElementById("precioCompra").value = "";
+
+    document.getElementById("precioMinorista").value = "";
+
+    document.getElementById("precioMayorista").value = "";
+
+    document.getElementById("activo").value = "true";
+
+    document.getElementById("unidadMedida").value = "";
+
+    document.getElementById("proveedor").value = "";
+
+    // =========================
+    // CATEGORIAS
+    // =========================
+
+    categorias = [];
+
+    renderCategoriasSeleccionadas();
+
+    // =========================
+    // IMAGENES
+    // =========================
+
+    imagenesBase64 = [];
+
+    document.getElementById("preview").innerHTML = "";
+
+    document.getElementById("inputImagenes").value = "";
+
+}
+
+// =========================================
+// LIMPIAR MODAL AL CERRAR
+// =========================================
+
+$('#modalArticulo').on('hidden.bs.modal', function () {
+
+    limpiarModalCrear();
+
+});
 
 // =========================================
 // EDITAR
@@ -1056,14 +1199,24 @@ document.getElementById("btnActualizarArticulo")
                         document.getElementById("editIdArticulo").value
                     ),
 
+                // =====================================
+                // NORMALIZAR FRACCIONES
+                // =====================================
+
                 nombre:
-                    document.getElementById("editNombre").value,
+                    normalizarFracciones(
+                        document.getElementById("editNombre").value
+                    ),
 
                 descripcion:
-                    document.getElementById("editDescripcion").value,
+                    normalizarFracciones(
+                        document.getElementById("editDescripcion").value
+                    ),
 
                 marca:
-                    document.getElementById("editMarca").value,
+                    normalizarFracciones(
+                        document.getElementById("editMarca").value
+                    ),
 
                 sku:
                     document.getElementById("editSku").value,
