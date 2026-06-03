@@ -23,6 +23,45 @@
 
 <body>
 
+    
+    <!-- PAGE LOADER -->
+    <div id="page-loader">
+
+        <div class="loader-wrapper">
+
+            <div class="loader-circle">
+
+                <svg class="progress-ring" width="140" height="140">
+
+                    <circle class="progress-ring-bg"
+                            cx="70"
+                            cy="70"
+                            r="60" />
+
+                    <circle class="progress-ring-fill"
+                            cx="70"
+                            cy="70"
+                            r="60" />
+
+                </svg>
+
+                <div class="loader-percent" id="loader-percent">
+                    0%
+                </div>
+
+            </div>
+
+            <h2>Cargando ISLAGO</h2>
+
+            <p id="loader-text">
+                Inicializando módulo...
+            </p>
+
+        </div>
+
+    </div>
+
+
     <div class="layout">
 
         <!-- SIDEBAR -->
@@ -134,42 +173,4 @@
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>
-
-<!-- PAGE LOADER -->
-<div id="page-loader">
-
-    <div class="loader-wrapper">
-
-        <div class="loader-circle">
-
-            <svg class="progress-ring" width="140" height="140">
-
-                <circle class="progress-ring-bg"
-                        cx="70"
-                        cy="70"
-                        r="60" />
-
-                <circle class="progress-ring-fill"
-                        cx="70"
-                        cy="70"
-                        r="60" />
-
-            </svg>
-
-            <div class="loader-percent" id="loader-percent">
-                0%
-            </div>
-
-        </div>
-
-        <h2>Cargando ISLAGO</h2>
-
-        <p id="loader-text">
-            Inicializando módulo...
-        </p>
-
-    </div>
-
-</div>
-
 </html>
