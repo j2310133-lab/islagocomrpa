@@ -1,10 +1,9 @@
-﻿using ISLAGO_V3.Entidad.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Articulo = ISLAGO_V3.Entidad.Models.Articulo;
+using ISLAGO_V3.Entidad.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace ISLAGO_V3.Datos.DBContext;
+namespace ISLAGO_V3.Datos;
 
 public partial class DBContextISLAGO : DbContext
 {
@@ -87,7 +86,6 @@ public partial class DBContextISLAGO : DbContext
 
     public virtual DbSet<Usuarioimagen> Usuarioimagens { get; set; }
 
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
     }
@@ -99,6 +97,8 @@ public partial class DBContextISLAGO : DbContext
             entity.HasKey(e => e.Id).HasName("articulo_pkey");
 
             entity.ToTable("articulo");
+
+            entity.HasIndex(e => e.Sku, "articulo_sku_unique").IsUnique();
 
             entity.HasIndex(e => e.Nombre, "idx_articulo_nombre");
 
@@ -112,6 +112,13 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.EsServicio)
                 .HasDefaultValue(false)
                 .HasColumnName("es_servicio");
+            entity.Property(e => e.FechaActualizacion)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fecha_actualizacion");
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("fecha_creacion");
             entity.Property(e => e.Idproveedor).HasColumnName("idproveedor");
             entity.Property(e => e.Idumedida).HasColumnName("idumedida");
             entity.Property(e => e.Marca)
@@ -173,6 +180,8 @@ public partial class DBContextISLAGO : DbContext
             entity.HasKey(e => e.Id).HasName("articulocategoria_pkey");
 
             entity.ToTable("articulocategoria");
+
+            entity.HasIndex(e => new { e.Idarticulo, e.Idcategoria }, "uq_articulo_categoria").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Idarticulo).HasColumnName("idarticulo");
@@ -270,11 +279,17 @@ public partial class DBContextISLAGO : DbContext
             entity.ToTable("compra");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Estado)
+                .HasMaxLength(20)
+                .HasDefaultValueSql("'COMPLETADA'::character varying")
+                .HasColumnName("estado");
             entity.Property(e => e.Fecha)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fecha");
             entity.Property(e => e.Idproveedor).HasColumnName("idproveedor");
+            entity.Property(e => e.Idusuario).HasColumnName("idusuario");
+            entity.Property(e => e.Observaciones).HasColumnName("observaciones");
             entity.Property(e => e.Total)
                 .HasPrecision(10, 2)
                 .HasColumnName("total");
@@ -282,6 +297,10 @@ public partial class DBContextISLAGO : DbContext
             entity.HasOne(d => d.IdproveedorNavigation).WithMany(p => p.Compras)
                 .HasForeignKey(d => d.Idproveedor)
                 .HasConstraintName("compra_idproveedor_fkey");
+
+            entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Compras)
+                .HasForeignKey(d => d.Idusuario)
+                .HasConstraintName("compra_idusuario_fkey");
         });
 
         modelBuilder.Entity<Descuento>(entity =>
@@ -373,6 +392,9 @@ public partial class DBContextISLAGO : DbContext
             entity.Property(e => e.Cantidad)
                 .HasPrecision(10, 2)
                 .HasColumnName("cantidad");
+            entity.Property(e => e.CostoUnitario)
+                .HasPrecision(10, 2)
+                .HasColumnName("costo_unitario");
             entity.Property(e => e.Idarticulo).HasColumnName("idarticulo");
             entity.Property(e => e.Idpedido).HasColumnName("idpedido");
             entity.Property(e => e.Precio)
@@ -539,6 +561,7 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnName("fecha");
             entity.Property(e => e.Idestadopedido).HasColumnName("idestadopedido");
             entity.Property(e => e.Idpedido).HasColumnName("idpedido");
+            entity.Property(e => e.Idusuario).HasColumnName("idusuario");
 
             entity.HasOne(d => d.IdestadopedidoNavigation).WithMany(p => p.Historialestadopedidos)
                 .HasForeignKey(d => d.Idestadopedido)
@@ -549,6 +572,10 @@ public partial class DBContextISLAGO : DbContext
                 .HasForeignKey(d => d.Idpedido)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("historialestadopedido_idpedido_fkey");
+
+            entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Historialestadopedidos)
+                .HasForeignKey(d => d.Idusuario)
+                .HasConstraintName("historial_idusuario_fkey");
         });
 
         modelBuilder.Entity<Imagen>(entity =>
@@ -594,7 +621,16 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("fecha");
             entity.Property(e => e.Idarticulo).HasColumnName("idarticulo");
+            entity.Property(e => e.Idcompra).HasColumnName("idcompra");
+            entity.Property(e => e.Idpedido).HasColumnName("idpedido");
+            entity.Property(e => e.Idusuario).HasColumnName("idusuario");
             entity.Property(e => e.Motivo).HasColumnName("motivo");
+            entity.Property(e => e.StockAnterior)
+                .HasPrecision(10, 2)
+                .HasColumnName("stock_anterior");
+            entity.Property(e => e.StockNuevo)
+                .HasPrecision(10, 2)
+                .HasColumnName("stock_nuevo");
             entity.Property(e => e.Tipo)
                 .HasMaxLength(20)
                 .HasColumnName("tipo");
@@ -602,6 +638,18 @@ public partial class DBContextISLAGO : DbContext
             entity.HasOne(d => d.IdarticuloNavigation).WithMany(p => p.MovimientoInventarios)
                 .HasForeignKey(d => d.Idarticulo)
                 .HasConstraintName("movimiento_inventario_idarticulo_fkey");
+
+            entity.HasOne(d => d.IdcompraNavigation).WithMany(p => p.MovimientoInventarios)
+                .HasForeignKey(d => d.Idcompra)
+                .HasConstraintName("movimiento_idcompra_fkey");
+
+            entity.HasOne(d => d.IdpedidoNavigation).WithMany(p => p.MovimientoInventarios)
+                .HasForeignKey(d => d.Idpedido)
+                .HasConstraintName("movimiento_idpedido_fkey");
+
+            entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.MovimientoInventarios)
+                .HasForeignKey(d => d.Idusuario)
+                .HasConstraintName("movimiento_idusuario_fkey");
         });
 
         modelBuilder.Entity<Notificacion>(entity =>
@@ -643,6 +691,7 @@ public partial class DBContextISLAGO : DbContext
                 .HasColumnName("fecha");
             entity.Property(e => e.Idformapago).HasColumnName("idformapago");
             entity.Property(e => e.Idpedido).HasColumnName("idpedido");
+            entity.Property(e => e.Idusuario).HasColumnName("idusuario");
             entity.Property(e => e.Monto)
                 .HasPrecision(10, 2)
                 .HasColumnName("monto");
@@ -658,6 +707,10 @@ public partial class DBContextISLAGO : DbContext
                 .HasForeignKey(d => d.Idpedido)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("pagos_idpedido_fkey");
+
+            entity.HasOne(d => d.IdusuarioNavigation).WithMany(p => p.Pagos)
+                .HasForeignKey(d => d.Idusuario)
+                .HasConstraintName("pagos_idusuario_fkey");
         });
 
         modelBuilder.Entity<Pedido>(entity =>
@@ -1017,5 +1070,6 @@ public partial class DBContextISLAGO : DbContext
 
         OnModelCreatingPartial(modelBuilder);
     }
+
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

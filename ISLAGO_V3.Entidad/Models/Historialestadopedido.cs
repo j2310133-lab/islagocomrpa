@@ -13,7 +13,11 @@ public partial class Historialestadopedido
 
     public DateTime? Fecha { get; set; }
 
+    public int? Idusuario { get; set; }
+
     public virtual Estadopedido? IdestadopedidoNavigation { get; set; }
 
     public virtual Pedido? IdpedidoNavigation { get; set; }
+
+    public virtual Usuario? IdusuarioNavigation { get; set; }
 }

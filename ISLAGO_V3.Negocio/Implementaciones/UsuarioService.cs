@@ -1,4 +1,4 @@
-﻿using ISLAGO_V3.Datos.DBContext;
+﻿using ISLAGO_V3.Datos;
 using ISLAGO_V3.Entidad.Models;
 using ISLAGO_V3.Negocio.Interfaces;
 using System;

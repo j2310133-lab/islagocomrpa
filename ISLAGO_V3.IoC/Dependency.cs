@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 //OTHERS
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ISLAGO_V3.Datos.DBContext;
+using ISLAGO_V3.Datos;
 using Microsoft.EntityFrameworkCore;
 using ISLAGO_V3.Datos.Interfaces;
 using ISLAGO_V3.Datos.Implementaciones;

@@ -17,6 +17,8 @@ public partial class DetallePedido
 
     public decimal? Subtotal { get; set; }
 
+    public decimal? CostoUnitario { get; set; }
+
     public virtual Articulo? IdarticuloNavigation { get; set; }
 
     public virtual Pedido? IdpedidoNavigation { get; set; }

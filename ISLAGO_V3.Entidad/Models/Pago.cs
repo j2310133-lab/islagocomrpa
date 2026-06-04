@@ -19,7 +19,11 @@ public partial class Pago
 
     public DateTime? Fecha { get; set; }
 
+    public int? Idusuario { get; set; }
+
     public virtual FormaPago? IdformapagoNavigation { get; set; }
 
     public virtual Pedido? IdpedidoNavigation { get; set; }
+
+    public virtual Usuario? IdusuarioNavigation { get; set; }
 }

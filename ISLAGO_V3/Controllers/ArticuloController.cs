@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ISLAGO_V3.Models.ViewModels;
 using ISLAGO_V3.Entidad.Models;
-using ISLAGO_V3.Datos.DBContext;
+using ISLAGO_V3.Datos;
 using ISLAGO_V3.Negocio.Interfaces;
 
 namespace ISLAGO_V3.Controllers
@@ -40,6 +40,7 @@ namespace ISLAGO_V3.Controllers
             try
             {
                 var lista = await _context.Articulos
+                 .Where(a => a.Activo == true)
                  .Select(a => new
                  {
                      a.Id,
