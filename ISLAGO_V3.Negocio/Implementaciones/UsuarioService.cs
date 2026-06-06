@@ -721,7 +721,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public async Task<List<Usuario?>> ObtenerPorGmail(string email)
+        public async Task<List<Usuario?>> ObtenerPorEmail(string email)
         {
             try
             {
@@ -992,10 +992,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public async Task<bool> ResetPassword(
-    int iduser,
-    bool activo
-)
+        public async Task<bool> ResetPassword(int iduser, bool activo)
         {
             using var t = await _uow.BeginTransactionAsync();
 
@@ -1059,6 +1056,179 @@ namespace ISLAGO_V3.Negocio.Implementaciones
                     ex
                 );
             }
+        }
+
+        public async Task<Usuario?> ObtenerUnoPorUsername(string username)
+        {
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(username)) return null;
+
+                username = username.Trim().ToLower();
+
+                return await _c.Usuarios
+                    .Include(x => x.UsuarioRols)
+                    .Include(x => x.Usuarioimagens)
+                    .Include(x => x.IdpersonaNavigation)
+                    .FirstOrDefaultAsync(x => x.Usarname.ToLower() == username);
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar obtener uno por nombre de usuario:{e.Message}", e);
+            }
+        }
+
+        public async Task<Usuario?> ObtenerUnoPorEmail(string email)
+        {
+
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(email)) return null;
+
+                email = email.Trim().ToLower();
+
+                return await _c.Usuarios
+                    .Include(x => x.UsuarioRols)
+                    .Include(x => x.Usuarioimagens)
+                    .Include(x => x.IdpersonaNavigation)
+                    .FirstOrDefaultAsync(e => e.Email.ToLower() == email);
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al obtener uno por email: {e.Message}", e);
+            }
+
+        }
+
+        public async Task<List<Rol>> ObtenerRoles(int idUsuario)
+        {
+            var usuarios = await _c.Usuarios
+                .Include(x => x.UsuarioRols)
+                .ThenInclude(x => x.IdrolNavigation)
+                .FirstOrDefaultAsync(x => x.Id == idUsuario);
+
+            if (usuarios == null) throw new Exception("Usuario no encontrado.");
+
+            return usuarios.UsuarioRols
+                .Where(x => x.IdrolNavigation != null)
+                .Select(x => x.IdrolNavigation!)
+                .ToList();
+        }
+
+        public async Task<bool> AsignarRoles(int idUsuario, List<int> roles)
+        {
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var usuario = await _repository.Obtener(x => x.Id == idUsuario);
+
+                if (usuario == null) throw new Exception("User not found 404");
+
+                roles ??= new List<int>();
+
+                // RolesActuales
+                var rolesActuales = await _c.UsuarioRols
+                    .Where(x => x.Idusuario == idUsuario)
+                    .ToListAsync();
+
+                var idsActuales = rolesActuales
+                    .Where(x => x.Idrol.HasValue)
+                    .Select(x => x.Idrol!.Value)
+                    .ToList();
+
+                // agregar roles
+                var agregar = roles
+                    .Except(idsActuales)
+                    .Select(x => new UsuarioRol
+                    {
+                        Idusuario = idUsuario,
+                        Idrol = x
+                    });
+
+                if (agregar.Any()) await _c.UsuarioRols.AddRangeAsync(agregar);
+
+                // Eliminar los que ya vienen
+                var eliminar = rolesActuales
+                    .Where(x =>
+                        x.Idrol.HasValue && !roles.Contains(x.Idrol.Value)
+                    ).ToList();
+
+                if (eliminar.Any()) _c.UsuarioRols.RemoveRange(eliminar);
+
+                // Save changes
+                await _c.SaveChangesAsync();
+
+                await t.CommitAsync();
+
+                return true;
+
+            }
+            catch(Exception ex)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al asignar roles: {ex.Message}");
+            }
+        }
+
+        public Task<bool> IncrementarIntentosFallidos(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ReiniciarIntentosFallidos(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<SesionUsuario>> ObtenerSesionesActivas(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> CerrarTodasLasSesiones(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> GenerarTokenRecuperacion(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ValidarTokenRecuperacion(string token)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> RecuperarPassword(string token, string nuevaPassword)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Activar2FA(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Desactivar2FA(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> GenerarCodigo2FA(int idUsuario)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ValidarCodigo2FA(int idUsuario, string codigo)
+        {
+            throw new NotImplementedException();
         }
     }
 }
