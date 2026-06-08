@@ -11,26 +11,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ISLAGO_V3.Datos.Interfaces;
 
+// Password Hasher
+//using Microsoft.AspNetCore.Identity;
+
 namespace ISLAGO_V3.Negocio.Implementaciones
 {
     public class UsuarioService : IUsuarioService
     {
         private readonly IGenericRepository<Usuario> _repository;
         private readonly DBContextISLAGO _c;
-        private readonly PasswordHasher<Usuario> _hasher;
+        //private readonly PasswordHasher<Usuario> _hasher;
         private readonly IBase64IMGSercies _imgServ;
         private readonly IGenericRepository<Imagen> _imgRep;
         private readonly IGenericRepository<Usuarioimagen> _userImgRep;
         private readonly IUnitOfWork _uow;
+        private readonly IPasswordHasher<Usuario> _hasher;
 
         public UsuarioService(
             DBContextISLAGO contexto,
-            PasswordHasher<Usuario> hasher,
+            //PasswordHasher<Usuario> hasher,
             IBase64IMGSercies imgServ,
             IGenericRepository<Imagen> imgRep,
             IGenericRepository<Usuarioimagen> userImgRep,
             IUnitOfWork uow,
-            IGenericRepository<Usuario> rep)
+            IGenericRepository<Usuario> rep,
+            IPasswordHasher<Usuario> hasher)
         {
             _c = contexto;
             _hasher = hasher;

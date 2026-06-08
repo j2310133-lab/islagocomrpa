@@ -14,8 +14,9 @@ using ISLAGO_V3.Datos.Implementaciones;
 using ISLAGO_V3.Entidad.Models.Options;
 using ISLAGO_V3.Negocio.Interfaces;
 using ISLAGO_V3.Negocio.Implementaciones;
-//using ISLAGO_V3.Negocio.Interfaces;
-//using ISLAGO_V3.Negocio.Implementaciones;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Identity;
+using ISLAGO_V3.Entidad.Models;
 
 namespace ISLAGO_V3.IoC
 {
@@ -36,6 +37,8 @@ namespace ISLAGO_V3.IoC
             serv.AddScoped<IArticuloServices, ArticuloServices>();
             serv.AddScoped<IBase64IMGSercies, Base64IMGServices>();
             serv.AddScoped<IUnitOfWork, UnitOfWork>();
+            serv.AddScoped<IUsuarioService, UsuarioService>();
+            serv.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
             // --------------------------------------
             // CONFIGURACIONES (Options Pattern)
