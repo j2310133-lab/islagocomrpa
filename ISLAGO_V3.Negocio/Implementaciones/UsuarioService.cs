@@ -1181,9 +1181,35 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public Task<bool> IncrementarIntentosFallidos(int idUsuario)
+        public async Task<bool> IncrementarIntentosFallidos(int idUsuario)
         {
-            throw new NotImplementedException();
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var usuario = await _repository.Obtener(x => x.Id == idUsuario);
+
+                if (usuario == null) throw new Exception("Usuario no encontrado");
+
+                usuario.IntentosFallidos = (usuario.IntentosFallidos ?? 0) + 1;
+
+                if (usuario.IntentosFallidos >= 4) usuario.Bloqueado = true;
+
+                _c.Usuarios.Update(usuario);
+
+                await _c.SaveChangesAsync();
+
+                await t.CommitAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al intentar incrementar intentos: {e.Message}", e);
+            }
         }
 
         public Task<bool> ReiniciarIntentosFallidos(int idUsuario)
