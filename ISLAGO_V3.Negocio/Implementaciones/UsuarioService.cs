@@ -1212,54 +1212,285 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public Task<bool> ReiniciarIntentosFallidos(int idUsuario)
+        public async Task<bool> ReiniciarIntentosFallidos(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var usuario = await _repository.Obtener(u => u.Id == idUsuario);
+
+                if (usuario == null) throw new Exception($"No se pudo obtener el usuario");
+
+                usuario.IntentosFallidos = 0;
+
+                _c.Usuarios.Update(usuario);
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al Reiniciar Intentos fallidos, tipo de error: {e.Message}", e);
+            }
         }
 
-        public Task<List<SesionUsuario>> ObtenerSesionesActivas(int idUsuario)
+        public async Task<List<SesionUsuario>> ObtenerSesionesActivas(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                return await _c.SesionUsuarios
+                    .Where(x =>
+                        x.Idusuario == idUsuario
+                        && x.Activo == true
+                    ).ToListAsync();
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Erro al intentar Obtener seciones activas, tipo de error: {e.Message}", e);
+            }
         }
 
-        public Task<bool> CerrarTodasLasSesiones(int idUsuario)
+        public async Task<bool> CerrarTodasLasSesiones(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var sesiones = await _c.SesionUsuarios
+                    .Where(su =>
+                        su.Idusuario == idUsuario
+                        && su.Activo == true
+                    ).ToListAsync();
+
+                foreach(var s in sesiones)
+                {
+                    s.Activo = false;
+                }
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al tratar de cerrar todas las sesiones, pila de error: {e.Message}", e);
+            }
         }
 
-        public Task<string> GenerarTokenRecuperacion(int idUsuario)
+        public async Task<string> GenerarTokenRecuperacion(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var usuario = await _repository.Obtener(x => x.Id == idUsuario);
+
+                if (usuario == null) throw new Exception($"Error al obtener usuario");
+
+                string token = Guid.NewGuid().ToString();
+
+                _c.RecuperacionCuenta.Add(
+                    new RecuperacionCuentum
+                    {
+                        Idusuario = idUsuario,
+                        Token = token,
+                        FechaExpiracion = DateTime.UtcNow.AddHours(1).AddMinutes(30).AddSeconds(20)
+                    });
+
+                await _c.SaveChangesAsync();
+
+                return token;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al generar token de recuperacion: {e.Message}", e);
+            }
         }
 
-        public Task<bool> ValidarTokenRecuperacion(string token)
+        public async Task<bool> ValidarTokenRecuperacion(string token)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var recovery = await _c.RecuperacionCuenta
+                    .FirstOrDefaultAsync(x =>
+                        x.Token == token
+                    );
+
+                if (recovery == null) return false;
+
+                if (recovery.FechaExpiracion < DateTime.UtcNow) return false;
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar validar token: {e.Message}", e);
+            }
         }
 
-        public Task<bool> RecuperarPassword(string token, string nuevaPassword)
+        public async Task<bool> RecuperarPassword(string token, string nuevaPassword)
         {
-            throw new NotImplementedException();
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var recovery = await _c.RecuperacionCuenta
+                    .FirstOrDefaultAsync(x =>
+                        x.Token == token
+                    );
+
+                if (recovery == null) throw new Exception("Token Invalidado");
+
+                if (recovery.Usado == true) throw new Exception("Token ya utilizado");
+
+                if(recovery.FechaExpiracion < DateTime.UtcNow) throw new Exception("Token ya expirado");
+
+                var usuario = await _repository.Obtener(u => u.Id == recovery.Idusuario);
+
+                if (usuario == null) throw new Exception("Usuario no econtrado");
+
+                usuario.PasswordHash =
+                    _hasher.HashPassword(
+                            usuario,
+                            nuevaPassword
+                        );
+
+                recovery.Usado = true;
+
+                _c.Usuarios.Update(usuario);
+
+                await _c.SaveChangesAsync();
+
+                await t.CommitAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al tratar de recuperar contraseña: {e.Message}", e);
+            }
         }
 
-        public Task<bool> Activar2FA(int idUsuario)
+        public async Task<bool> Activar2FA(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var existe = await _c.Usuario2fauths.FirstOrDefaultAsync(x => x.Idusuario == idUsuario);
+
+                if(existe != null)
+                {
+                    existe.Activo = true;
+                }
+                else
+                {
+                    _c.Usuario2fauths.Add(
+                        new Usuario2fauth
+                        {
+                            Idusuario = idUsuario,
+                            Secreto = Guid.NewGuid().ToString(),
+                            Activo = true
+                        });
+                }
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar activar autenticacion de 2 factores: {e.Message}", e);
+            }
         }
 
-        public Task<bool> Desactivar2FA(int idUsuario)
+        public async Task<bool> Desactivar2FA(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var auth = await _c.Usuario2fauths.FirstOrDefaultAsync(u => u.Idusuario == idUsuario);
+
+                if (auth == null) return false;
+
+                auth.Activo = false;
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al desactivar aut de 2 factores: {e.Message}", e);
+            }
         }
 
-        public Task<string> GenerarCodigo2FA(int idUsuario)
+        public async Task<string> GenerarCodigo2FA(int idUsuario)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                string codigo =
+                    new Random()
+                    .Next(100000, 999999)
+                    .ToString();
+
+                _c.Codigo2fas.Add(
+                    new Codigo2fa
+                    {
+                        Idusuario = idUsuario,
+                        Codigo = codigo,
+                        Expiracion = DateTime.UtcNow.AddMinutes(5)
+                    });
+
+                await _c.SaveChangesAsync();
+
+                return codigo;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar generar codigo de 2 factores: {e.Message}", e);
+            }
         }
 
-        public Task<bool> ValidarCodigo2FA(int idUsuario, string codigo)
+        public async Task<bool> ValidarCodigo2FA(int idUsuario, string codigo)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var registro = await _c.Codigo2fas
+                    .FirstOrDefaultAsync(x =>
+                        x.Idusuario == idUsuario
+                        && x.Codigo == codigo
+                        && x.Usado == false
+                    );
+
+                if (registro == null) return false;
+
+                if (registro.Expiracion < DateTime.UtcNow) return false;
+
+                registro.Usado = true;
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al intentar validar codigo: {e.Message}", e);
+            }
         }
     }
 }
