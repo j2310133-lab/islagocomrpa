@@ -1,31 +1,35 @@
-﻿using ISLAGO_V3.Entidad.Models;
+﻿using ISLAGO_V3.Models.ViewModels;
 
-namespace ISLAGO_V3.Models.ViewModels
+public class UsuarioVM
 {
-    public class UsuarioVM
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        public string Usarname { get; set; } = null!;
+    public string Usarname { get; set; } = null!;
 
-        public string PasswordHash { get; set; } = null!;
+    public string? Password { get; set; }
 
-        public string Email { get; set; } = null!;
+    public string Email { get; set; } = null!;
 
-        public bool? Activo { get; set; }
+    public bool? Activo { get; set; }
 
-        public bool? Bloqueado { get; set; }
+    public bool? Bloqueado { get; set; }
 
-        public int? IntentosFallidos { get; set; }
+    public int? IntentosFallidos { get; set; }
 
-        public DateTime? UltimoLogin { get; set; }
+    public DateTime? UltimoLogin { get; set; }
 
-        //persona
-        public List<int>? PersonaId { get; set; }
-        public List<PersonaVM>? Personas { get; set; }
+    // Persona
+    public int? PersonaId { get; set; }
 
-        // imagenes
-        public List<string>? ImagenesBase64 { get; set; }
-        public string? ImagenesUrl { get; set; }
-    }
+    public List<PersonaVM>? Personas { get; set; }
+
+    // Roles
+    public List<int>? RolesSeleccionados { get; set; }
+
+    public List<RolVM>? Roles { get; set; }
+
+    // Imagen
+    public string? ImagenBase64 { get; set; }
+
+    public string? ImagenUrl { get; set; }
 }
