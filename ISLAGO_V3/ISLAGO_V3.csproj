@@ -7,9 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\img\usuarios-img\**" />
     <Compile Remove="wwwroot\ISLagoIMG\**" />
+    <Content Remove="wwwroot\img\usuarios-img\**" />
     <Content Remove="wwwroot\ISLagoIMG\**" />
+    <EmbeddedResource Remove="wwwroot\img\usuarios-img\**" />
     <EmbeddedResource Remove="wwwroot\ISLagoIMG\**" />
+    <None Remove="wwwroot\img\usuarios-img\**" />
     <None Remove="wwwroot\ISLagoIMG\**" />
   </ItemGroup>
 
@@ -20,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\img\usuarios-img\" />
+    <Folder Include="wwwroot\img\usuario\" />
   </ItemGroup>
 
 </Project>

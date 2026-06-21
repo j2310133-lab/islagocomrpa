@@ -52,17 +52,20 @@ namespace ISLAGO_V3.IoC
 
                 opt.RutasBase = new Dictionary<string, string>
                 {
-                    { "imagen-articulo", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\articulos-img\"}
+                    { "imagen-articulo", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\articulos\" },
+                    { "imagen-usuario", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\usuario\" }
                 };
 
                 opt.FormatosPermitidos = new Dictionary<string, string[]>
                 {
-                    { "imagen-articulo", new [] {"jpg", "jpeg", "svg", "png"} }
+                    { "imagen-articulo", new [] {"jpg", "jpeg", "svg", "png"} },
+                    { "imagen-usuario", new[] {"jpg", "jpeg", "svg", "png"} }
                 };
 
                 opt.TamañosMaximosMb = new Dictionary<string, int>
                 {
-                    { "imagen-articulo", 1000 }
+                    { "imagen-articulo", 1000 },
+                    { "imagen-usuario", 1200 }
                 };
             });
         }
