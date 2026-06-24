@@ -25,9 +25,17 @@ public partial class Usuario
 
     public virtual ICollection<Codigo2fa> Codigo2fas { get; set; } = new List<Codigo2fa>();
 
+    public virtual ICollection<Compra> Compras { get; set; } = new List<Compra>();
+
+    public virtual ICollection<Historialestadopedido> Historialestadopedidos { get; set; } = new List<Historialestadopedido>();
+
     public virtual Persona? IdpersonaNavigation { get; set; }
 
+    public virtual ICollection<MovimientoInventario> MovimientoInventarios { get; set; } = new List<MovimientoInventario>();
+
     public virtual ICollection<Notificacion> Notificacions { get; set; } = new List<Notificacion>();
+
+    public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 
     public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
 

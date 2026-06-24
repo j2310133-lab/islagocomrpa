@@ -1,0 +1,210 @@
+﻿@*
+    Gestion de usuarios.
+*@
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+@section Estilos{
+    <link href="~/css/usuario.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<div class="usuario-container">
+
+    <div class="usuario-header">
+
+        <div>
+            <h2>Administración de Usuarios</h2>
+            <p>
+                Gestión completa de usuarios, accesos,
+                roles y permisos.
+            </p>
+        </div>
+
+        <button class="btn-nuevo"
+                data-toggle="modal"
+                data-target="#modalUsuario">
+
+            <i class="fas fa-user-plus"></i>
+            Nuevo Usuario
+
+        </button>
+
+    </div>
+
+    <!-- ESTADISTICAS -->
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <span>Total Usuarios</span>
+            <h3 id="totalUsuarios">0</h3>
+        </div>
+
+        <div class="stat-card">
+            <span>Activos</span>
+            <h3 id="usuariosActivos">0</h3>
+        </div>
+
+        <div class="stat-card">
+            <span>Bloqueados</span>
+            <h3 id="usuariosBloqueados">0</h3>
+        </div>
+
+    </div>
+
+    <!-- BUSCADOR -->
+
+    <div class="search-wrapper">
+
+        <i class="fas fa-search"></i>
+
+        <input id="txtBuscarUsuario"
+               type="text"
+               placeholder="Buscar usuario..." />
+
+    </div>
+
+    <!-- GRID -->
+
+    <div id="usuariosGrid"
+         class="usuarios-grid">
+    </div>
+
+</div>
+
+<!-- ===================================== -->
+<!-- MODAL CREAR -->
+<!-- ===================================== -->
+
+<div class="modal fade"
+     id="modalUsuario">
+
+    <div class="modal-dialog modal-xl">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5>
+                    Crear Usuario
+                </h5>
+
+                <button class="close"
+                        data-dismiss="modal">
+
+                    &times;
+
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row">
+
+                    <!-- IZQUIERDA -->
+
+                    <div class="col-lg-6">
+
+                        <label>Usuario</label>
+
+                        <input id="username"
+                               class="form-control mb-3" />
+
+                        <label>Email</label>
+
+                        <input id="email"
+                               class="form-control mb-3" />
+
+                        <label>Contraseña</label>
+
+                        <input id="password"
+                               type="password"
+                               class="form-control mb-3" />
+
+                        <label>Persona</label>
+
+                        <select id="persona"
+                                class="form-control">
+                        </select>
+
+                        <label class="mt-4">
+                            Roles
+                        </label>
+
+                        <select id="rolSelect"
+                                class="form-control mb-2">
+
+                            <option value="">
+                                Seleccione un rol
+                            </option>
+
+                        </select>
+
+                        <div id="rolesSeleccionados"
+                             class="roles-selected">
+                        </div>
+
+                    </div>
+
+                    <!-- DERECHA -->
+
+                    <div class="col-lg-6">
+
+                        <label>Fotografía</label>
+
+                        <div class="upload-user">
+
+                            <input id="imagenUsuario"
+                                   type="file"
+                                   accept="image/*">
+
+                            <i class="fas fa-camera"></i>
+
+                            <span>
+                                Seleccionar imagen
+                            </span>
+
+                        </div>
+
+                        <div class="preview-user">
+
+                            <img id="previewUsuario"
+                                 src="/img/default-user.png">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn btn-secondary"
+                        data-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button id="btnGuardarUsuario"
+                        class="btn btn-success">
+
+                    Guardar Usuario
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts{
+    <script src="~/js/usuario.js" asp-append-version="true"></script>
+}

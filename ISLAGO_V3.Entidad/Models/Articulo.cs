@@ -43,6 +43,10 @@ public partial class Articulo
 
     public bool? PermiteDecimal { get; set; }
 
+    public DateTime? FechaCreacion { get; set; }
+
+    public DateTime? FechaActualizacion { get; set; }
+
     public virtual ICollection<Articulocategorium> Articulocategoria { get; set; } = new List<Articulocategorium>();
 
     public virtual ICollection<Articuloimagen> Articuloimagens { get; set; } = new List<Articuloimagen>();

@@ -17,5 +17,21 @@ public partial class MovimientoInventario
 
     public DateTime? Fecha { get; set; }
 
+    public decimal? StockAnterior { get; set; }
+
+    public decimal? StockNuevo { get; set; }
+
+    public int? Idusuario { get; set; }
+
+    public int? Idcompra { get; set; }
+
+    public int? Idpedido { get; set; }
+
     public virtual Articulo? IdarticuloNavigation { get; set; }
+
+    public virtual Compra? IdcompraNavigation { get; set; }
+
+    public virtual Pedido? IdpedidoNavigation { get; set; }
+
+    public virtual Usuario? IdusuarioNavigation { get; set; }
 }

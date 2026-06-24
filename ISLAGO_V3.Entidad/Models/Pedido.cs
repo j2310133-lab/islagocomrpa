@@ -45,6 +45,7 @@ public partial class Pedido
 
     public virtual Usuario? IdusuarioNavigation { get; set; }
 
+    public virtual ICollection<MovimientoInventario> MovimientoInventarios { get; set; } = new List<MovimientoInventario>();
+
     public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 }
-

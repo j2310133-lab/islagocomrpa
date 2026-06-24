@@ -7,15 +7,16 @@ using System.Threading.Tasks;
 //OTHERS
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ISLAGO_V3.Datos.DBContext;
+using ISLAGO_V3.Datos;
 using Microsoft.EntityFrameworkCore;
 using ISLAGO_V3.Datos.Interfaces;
 using ISLAGO_V3.Datos.Implementaciones;
 using ISLAGO_V3.Entidad.Models.Options;
 using ISLAGO_V3.Negocio.Interfaces;
 using ISLAGO_V3.Negocio.Implementaciones;
-//using ISLAGO_V3.Negocio.Interfaces;
-//using ISLAGO_V3.Negocio.Implementaciones;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Identity;
+using ISLAGO_V3.Entidad.Models;
 
 namespace ISLAGO_V3.IoC
 {
@@ -36,6 +37,8 @@ namespace ISLAGO_V3.IoC
             serv.AddScoped<IArticuloServices, ArticuloServices>();
             serv.AddScoped<IBase64IMGSercies, Base64IMGServices>();
             serv.AddScoped<IUnitOfWork, UnitOfWork>();
+            serv.AddScoped<IUsuarioService, UsuarioService>();
+            serv.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
             // --------------------------------------
             // CONFIGURACIONES (Options Pattern)
@@ -49,17 +52,20 @@ namespace ISLAGO_V3.IoC
 
                 opt.RutasBase = new Dictionary<string, string>
                 {
-                    { "imagen-articulo", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\articulos-img\"}
+                    { "imagen-articulo", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\articulos\" },
+                    { "imagen-usuario", @"C:\Users\Jonathan\source\repos\ISLAGO_V3\ISLAGO_V3\wwwroot\img\usuario\" }
                 };
 
                 opt.FormatosPermitidos = new Dictionary<string, string[]>
                 {
-                    { "imagen-articulo", new [] {"jpg", "jpeg", "svg", "png"} }
+                    { "imagen-articulo", new [] {"jpg", "jpeg", "svg", "png"} },
+                    { "imagen-usuario", new[] {"jpg", "jpeg", "svg", "png"} }
                 };
 
                 opt.TamañosMaximosMb = new Dictionary<string, int>
                 {
-                    { "imagen-articulo", 1000 }
+                    { "imagen-articulo", 1000 },
+                    { "imagen-usuario", 1200 }
                 };
             });
         }

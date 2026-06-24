@@ -1,4 +1,4 @@
-﻿using ISLAGO_V3.Datos.DBContext;
+﻿using ISLAGO_V3.Datos;
 using ISLAGO_V3.Entidad.Models;
 using ISLAGO_V3.Negocio.Interfaces;
 using System;
@@ -11,26 +11,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ISLAGO_V3.Datos.Interfaces;
 
+// Password Hasher
+//using Microsoft.AspNetCore.Identity;
+
 namespace ISLAGO_V3.Negocio.Implementaciones
 {
     public class UsuarioService : IUsuarioService
     {
         private readonly IGenericRepository<Usuario> _repository;
         private readonly DBContextISLAGO _c;
-        private readonly PasswordHasher<Usuario> _hasher;
+        //private readonly PasswordHasher<Usuario> _hasher;
         private readonly IBase64IMGSercies _imgServ;
         private readonly IGenericRepository<Imagen> _imgRep;
         private readonly IGenericRepository<Usuarioimagen> _userImgRep;
         private readonly IUnitOfWork _uow;
+        private readonly IPasswordHasher<Usuario> _hasher;
 
         public UsuarioService(
             DBContextISLAGO contexto,
-            PasswordHasher<Usuario> hasher,
+            //PasswordHasher<Usuario> hasher,
             IBase64IMGSercies imgServ,
             IGenericRepository<Imagen> imgRep,
             IGenericRepository<Usuarioimagen> userImgRep,
             IUnitOfWork uow,
-            IGenericRepository<Usuario> rep)
+            IGenericRepository<Usuario> rep,
+            IPasswordHasher<Usuario> hasher)
         {
             _c = contexto;
             _hasher = hasher;
@@ -721,7 +726,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public async Task<List<Usuario?>> ObtenerPorGmail(string email)
+        public async Task<List<Usuario?>> ObtenerPorEmail(string email)
         {
             try
             {
@@ -992,10 +997,7 @@ namespace ISLAGO_V3.Negocio.Implementaciones
             }
         }
 
-        public async Task<bool> ResetPassword(
-    int iduser,
-    bool activo
-)
+        public async Task<bool> ResetPassword(int iduser, bool activo)
         {
             using var t = await _uow.BeginTransactionAsync();
 
@@ -1058,6 +1060,436 @@ namespace ISLAGO_V3.Negocio.Implementaciones
                     $"Error al cerrar sesión: {ex.Message}",
                     ex
                 );
+            }
+        }
+
+        public async Task<Usuario?> ObtenerUnoPorUsername(string username)
+        {
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(username)) return null;
+
+                username = username.Trim().ToLower();
+
+                return await _c.Usuarios
+                    .Include(x => x.UsuarioRols)
+                    .Include(x => x.Usuarioimagens)
+                    .Include(x => x.IdpersonaNavigation)
+                    .FirstOrDefaultAsync(x => x.Usarname.ToLower() == username);
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar obtener uno por nombre de usuario:{e.Message}", e);
+            }
+        }
+
+        public async Task<Usuario?> ObtenerUnoPorEmail(string email)
+        {
+
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(email)) return null;
+
+                email = email.Trim().ToLower();
+
+                return await _c.Usuarios
+                    .Include(x => x.UsuarioRols)
+                    .Include(x => x.Usuarioimagens)
+                    .Include(x => x.IdpersonaNavigation)
+                    .FirstOrDefaultAsync(e => e.Email.ToLower() == email);
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al obtener uno por email: {e.Message}", e);
+            }
+
+        }
+
+        public async Task<List<Rol>> ObtenerRoles(int idUsuario)
+        {
+            var usuarios = await _c.Usuarios
+                .Include(x => x.UsuarioRols)
+                .ThenInclude(x => x.IdrolNavigation)
+                .FirstOrDefaultAsync(x => x.Id == idUsuario);
+
+            if (usuarios == null) throw new Exception("Usuario no encontrado.");
+
+            return usuarios.UsuarioRols
+                .Where(x => x.IdrolNavigation != null)
+                .Select(x => x.IdrolNavigation!)
+                .ToList();
+        }
+
+        public async Task<bool> AsignarRoles(int idUsuario, List<int> roles)
+        {
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var usuario = await _repository.Obtener(x => x.Id == idUsuario);
+
+                if (usuario == null) throw new Exception("User not found 404");
+
+                roles ??= new List<int>();
+
+                // RolesActuales
+                var rolesActuales = await _c.UsuarioRols
+                    .Where(x => x.Idusuario == idUsuario)
+                    .ToListAsync();
+
+                var idsActuales = rolesActuales
+                    .Where(x => x.Idrol.HasValue)
+                    .Select(x => x.Idrol!.Value)
+                    .ToList();
+
+                // agregar roles
+                var agregar = roles
+                    .Except(idsActuales)
+                    .Select(x => new UsuarioRol
+                    {
+                        Idusuario = idUsuario,
+                        Idrol = x
+                    });
+
+                if (agregar.Any()) await _c.UsuarioRols.AddRangeAsync(agregar);
+
+                // Eliminar los que ya vienen
+                var eliminar = rolesActuales
+                    .Where(x =>
+                        x.Idrol.HasValue && !roles.Contains(x.Idrol.Value)
+                    ).ToList();
+
+                if (eliminar.Any()) _c.UsuarioRols.RemoveRange(eliminar);
+
+                // Save changes
+                await _c.SaveChangesAsync();
+
+                await t.CommitAsync();
+
+                return true;
+
+            }
+            catch(Exception ex)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al asignar roles: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> IncrementarIntentosFallidos(int idUsuario)
+        {
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var usuario = await _repository.Obtener(x => x.Id == idUsuario);
+
+                if (usuario == null) throw new Exception("Usuario no encontrado");
+
+                usuario.IntentosFallidos = (usuario.IntentosFallidos ?? 0) + 1;
+
+                if (usuario.IntentosFallidos >= 4) usuario.Bloqueado = true;
+
+                _c.Usuarios.Update(usuario);
+
+                await _c.SaveChangesAsync();
+
+                await t.CommitAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al intentar incrementar intentos: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> ReiniciarIntentosFallidos(int idUsuario)
+        {
+            try
+            {
+
+                var usuario = await _repository.Obtener(u => u.Id == idUsuario);
+
+                if (usuario == null) throw new Exception($"No se pudo obtener el usuario");
+
+                usuario.IntentosFallidos = 0;
+
+                _c.Usuarios.Update(usuario);
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al Reiniciar Intentos fallidos, tipo de error: {e.Message}", e);
+            }
+        }
+
+        public async Task<List<SesionUsuario>> ObtenerSesionesActivas(int idUsuario)
+        {
+            try
+            {
+
+                return await _c.SesionUsuarios
+                    .Where(x =>
+                        x.Idusuario == idUsuario
+                        && x.Activo == true
+                    ).ToListAsync();
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Erro al intentar Obtener seciones activas, tipo de error: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> CerrarTodasLasSesiones(int idUsuario)
+        {
+            try
+            {
+
+                var sesiones = await _c.SesionUsuarios
+                    .Where(su =>
+                        su.Idusuario == idUsuario
+                        && su.Activo == true
+                    ).ToListAsync();
+
+                foreach(var s in sesiones)
+                {
+                    s.Activo = false;
+                }
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al tratar de cerrar todas las sesiones, pila de error: {e.Message}", e);
+            }
+        }
+
+        public async Task<string> GenerarTokenRecuperacion(int idUsuario)
+        {
+            try
+            {
+
+                var usuario = await _repository.Obtener(x => x.Id == idUsuario);
+
+                if (usuario == null) throw new Exception($"Error al obtener usuario");
+
+                string token = Guid.NewGuid().ToString();
+
+                _c.RecuperacionCuenta.Add(
+                    new RecuperacionCuentum
+                    {
+                        Idusuario = idUsuario,
+                        Token = token,
+                        FechaExpiracion = DateTime.UtcNow.AddHours(1).AddMinutes(30).AddSeconds(20)
+                    });
+
+                await _c.SaveChangesAsync();
+
+                return token;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al generar token de recuperacion: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> ValidarTokenRecuperacion(string token)
+        {
+            try
+            {
+
+                var recovery = await _c.RecuperacionCuenta
+                    .FirstOrDefaultAsync(x =>
+                        x.Token == token
+                    );
+
+                if (recovery == null) return false;
+
+                if (recovery.FechaExpiracion < DateTime.UtcNow) return false;
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar validar token: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> RecuperarPassword(string token, string nuevaPassword)
+        {
+            using var t = await _uow.BeginTransactionAsync();
+
+            try
+            {
+
+                var recovery = await _c.RecuperacionCuenta
+                    .FirstOrDefaultAsync(x =>
+                        x.Token == token
+                    );
+
+                if (recovery == null) throw new Exception("Token Invalidado");
+
+                if (recovery.Usado == true) throw new Exception("Token ya utilizado");
+
+                if(recovery.FechaExpiracion < DateTime.UtcNow) throw new Exception("Token ya expirado");
+
+                var usuario = await _repository.Obtener(u => u.Id == recovery.Idusuario);
+
+                if (usuario == null) throw new Exception("Usuario no econtrado");
+
+                usuario.PasswordHash =
+                    _hasher.HashPassword(
+                            usuario,
+                            nuevaPassword
+                        );
+
+                recovery.Usado = true;
+
+                _c.Usuarios.Update(usuario);
+
+                await _c.SaveChangesAsync();
+
+                await t.CommitAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                await t.RollbackAsync();
+                throw new Exception($"Error al tratar de recuperar contraseña: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> Activar2FA(int idUsuario)
+        {
+            try
+            {
+
+                var existe = await _c.Usuario2fauths.FirstOrDefaultAsync(x => x.Idusuario == idUsuario);
+
+                if(existe != null)
+                {
+                    existe.Activo = true;
+                }
+                else
+                {
+                    _c.Usuario2fauths.Add(
+                        new Usuario2fauth
+                        {
+                            Idusuario = idUsuario,
+                            Secreto = Guid.NewGuid().ToString(),
+                            Activo = true
+                        });
+                }
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar activar autenticacion de 2 factores: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> Desactivar2FA(int idUsuario)
+        {
+            try
+            {
+
+                var auth = await _c.Usuario2fauths.FirstOrDefaultAsync(u => u.Idusuario == idUsuario);
+
+                if (auth == null) return false;
+
+                auth.Activo = false;
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al desactivar aut de 2 factores: {e.Message}", e);
+            }
+        }
+
+        public async Task<string> GenerarCodigo2FA(int idUsuario)
+        {
+            try
+            {
+
+                string codigo =
+                    new Random()
+                    .Next(100000, 999999)
+                    .ToString();
+
+                _c.Codigo2fas.Add(
+                    new Codigo2fa
+                    {
+                        Idusuario = idUsuario,
+                        Codigo = codigo,
+                        Expiracion = DateTime.UtcNow.AddMinutes(5)
+                    });
+
+                await _c.SaveChangesAsync();
+
+                return codigo;
+
+            }
+            catch(Exception e)
+            {
+                throw new Exception($"Error al intentar generar codigo de 2 factores: {e.Message}", e);
+            }
+        }
+
+        public async Task<bool> ValidarCodigo2FA(int idUsuario, string codigo)
+        {
+            try
+            {
+
+                var registro = await _c.Codigo2fas
+                    .FirstOrDefaultAsync(x =>
+                        x.Idusuario == idUsuario
+                        && x.Codigo == codigo
+                        && x.Usado == false
+                    );
+
+                if (registro == null) return false;
+
+                if (registro.Expiracion < DateTime.UtcNow) return false;
+
+                registro.Usado = true;
+
+                await _c.SaveChangesAsync();
+
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al intentar validar codigo: {e.Message}", e);
             }
         }
     }
