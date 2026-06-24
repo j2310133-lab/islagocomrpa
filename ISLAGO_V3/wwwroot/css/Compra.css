@@ -1,0 +1,100 @@
+﻿body {
+
+
+}
+
+.compra-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.05);
+}
+
+.compra-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+    .compra-header h3 {
+        margin: 0;
+    }
+
+#buscadorCompras {
+    border-radius: 10px;
+    padding: 10px 15px;
+}
+
+.compra-table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.compra-table td {
+    vertical-align: middle;
+}
+
+.btnVerDetalle {
+    min-width: 80px;
+}
+
+.btnVerDetalle {
+    border-radius: 8px;
+}
+
+.total-box {
+    text-align: right;
+    margin-top: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #198754;
+}
+
+.modal-content {
+    border-radius: 12px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid #eee;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+
+    .compra-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+        .compra-header button {
+            width: 100%;
+        }
+
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+    }
+
+    .modal-content {
+        min-height: 100vh;
+        border-radius: 0;
+    }
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+#detalleCompra select {
+    min-width: 180px;
+}
+
+#detalleCompra input {
+    min-width: 80px;
+}

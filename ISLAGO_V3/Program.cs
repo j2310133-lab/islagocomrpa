@@ -1,14 +1,19 @@
+using ISLAGO_V3.Datos.Implementaciones;
 using ISLAGO_V3.IoC;
+using ISLAGO_V3.Negocio.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddScoped<ICompraService, CompraService>();
+
 //Inyectar dependencia
 builder.Services.InyectarDependencias(builder.Configuration);
 
 builder.Services.AddControllersWithViews();
+
 
 var app = builder.Build();
 
