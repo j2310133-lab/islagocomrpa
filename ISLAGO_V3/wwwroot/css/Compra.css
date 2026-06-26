@@ -98,3 +98,16 @@
 #detalleCompra input {
     min-width: 80px;
 }
+
+.tabla-compras-container {
+    max-height: calc(100vh - 290px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.compra-table thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 5;
+}

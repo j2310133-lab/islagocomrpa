@@ -1,7 +1,7 @@
-﻿using ISLAGO_V3.Datos.DBContext;
-using ISLAGO_V3.Entidad.Models;
+﻿using ISLAGO_V3.Entidad.Models;
 using ISLAGO_V3.Negocio.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ISLAGO_V3.Datos;
 
 namespace ISLAGO_V3.Datos.Implementaciones
 {
@@ -13,6 +13,8 @@ namespace ISLAGO_V3.Datos.Implementaciones
         {
             _context = context;
         }
+
+
 
         public async Task<List<Compra>> ObtenerTodas()
         {
@@ -27,6 +29,21 @@ namespace ISLAGO_V3.Datos.Implementaciones
             Compra compra,
             List<DetalleCompra> detalles)
         {
+            if (compra.Idproveedor <= 0)
+                throw new Exception("Proveedor inválido.");
+
+            if (detalles == null || !detalles.Any())
+                throw new Exception("Debe agregar al menos un artículo.");
+
+            foreach (var d in detalles)
+            {
+                if (d.Cantidad <= 0)
+                    throw new Exception("Cantidad inválida.");
+
+                if (d.Precio <= 0)
+                    throw new Exception("Precio inválido.");
+            }
+
             using var transaction =
                 await _context.Database.BeginTransactionAsync();
 

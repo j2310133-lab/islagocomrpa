@@ -1,6 +1,7 @@
 using ISLAGO_V3.Datos.Implementaciones;
 using ISLAGO_V3.IoC;
 using ISLAGO_V3.Negocio.Interfaces;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,9 @@ builder.Services.InyectarDependencias(builder.Configuration);
 
 builder.Services.AddControllersWithViews();
 
+
+QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.EnableDebugging = true;
 
 var app = builder.Build();
 

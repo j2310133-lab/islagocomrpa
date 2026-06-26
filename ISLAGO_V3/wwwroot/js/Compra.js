@@ -1,31 +1,185 @@
-﻿$(document).ready(function () {
+﻿// =========================================
+// VARIABLES GLOBALES
+// =========================================
+
+let listaCompras = [];
+let articulosProveedor = [];
+
+// =========================================
+// INIT
+// =========================================
+
+$(document).ready(function () {
 
     cargarProveedores();
 
+    listarCompras();
+
 });
 
-// ==============================
+// =========================================
+// LISTAR COMPRAS
+// =========================================
+
+async function listarCompras() {
+
+    try {
+
+        const res = await fetch("/Compra/Listar");
+
+        if (!res.ok) {
+
+            throw new Error(
+                "No se pudieron cargar las compras."
+            );
+
+        }
+
+        const data = await res.json();
+
+        listaCompras = data;
+
+        renderCompras(data);
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message
+        });
+
+    }
+
+}
+
+// =========================================
+// RENDER COMPRAS
+// =========================================
+
+function renderCompras(data) {
+
+    const tbody = $("#tablaCompras");
+
+    tbody.empty();
+
+    if (!data || data.length === 0) {
+
+        tbody.append(`
+
+            <tr>
+
+                <td colspan="5"
+                    class="text-center text-muted">
+
+                    No hay compras registradas.
+
+                </td>
+
+            </tr>
+
+        `);
+
+        return;
+
+    }
+
+    data.forEach(compra => {
+
+        tbody.append(`
+
+            <tr>
+
+                <td class="compra-id">
+
+                    ${compra.id}
+
+                </td>
+
+                <td class="proveedor">
+
+                    ${compra.proveedor}
+
+                </td>
+
+                <td class="fecha"
+                    data-fecha="${compra.fechaBusqueda}">
+
+                    ${compra.fecha}
+
+                </td>
+
+                <td>
+
+                    C$ ${Number(compra.total).toFixed(2)}
+
+                </td>
+
+                <td>
+
+                    <button
+                        class="btn btn-info btnVerDetalle"
+                        data-id="${compra.id}">
+
+                        Ver
+
+                    </button>
+
+<a
+    class="btn btn-danger"
+    href="/Compra/DescargarPdf?id=${compra.id}"
+    target="_blank"
+    title="Descargar PDF">
+
+    <i class="fas fa-file-pdf"></i>
+
+</a>
+
+                </td>
+
+            </tr>
+
+        `);
+
+    });
+
+}
+
+// =========================================
 // CARGAR PROVEEDORES
-// ==============================
+// =========================================
 
 function cargarProveedores() {
 
     $.get("/Compra/ObtenerProveedores", function (data) {
 
-        $("#proveedor").empty();
+        const select = $("#proveedor");
 
-        $("#proveedor").append(`
+        select.empty();
+
+        select.append(`
+
             <option value="">
+
                 Seleccione proveedor
+
             </option>
+
         `);
 
         data.forEach(p => {
 
-            $("#proveedor").append(`
+            select.append(`
+
                 <option value="${p.id}">
+
                     ${p.nombre}
+
                 </option>
+
             `);
 
         });
@@ -34,50 +188,67 @@ function cargarProveedores() {
 
 }
 
-let articulosProveedor = [];
-
-// ==============================
+// =========================================
 // CAMBIO DE PROVEEDOR
-// ==============================
+// =========================================
 
 $(document).on("change", "#proveedor", function () {
 
-    let idProveedor = $(this).val();
+    const idProveedor = $(this).val();
 
     $("#detalleCompra").empty();
 
     $("#totalCompra").text("0.00");
 
+    articulosProveedor = [];
+
     if (!idProveedor)
         return;
 
     $.get(
+
         `/Compra/ObtenerArticulosPorProveedor?idProveedor=${idProveedor}`,
+
         function (data) {
 
             articulosProveedor = data;
 
             agregarFilaArticulo();
+
         }
+
     );
 
 });
 
+// =========================================
+// AGREGAR FILA
+// =========================================
+
 function agregarFilaArticulo() {
 
     let opciones = `
+
         <option value="">
+
             Seleccione artículo
+
         </option>
+
     `;
 
     articulosProveedor.forEach(a => {
 
         opciones += `
-            <option value="${a.id}"
-                    data-precio="${a.precio}">
+
+            <option
+                value="${a.id}"
+                data-precio="${a.precio}">
+
                 ${a.nombre}
+
             </option>
+
         `;
 
     });
@@ -87,37 +258,55 @@ function agregarFilaArticulo() {
         <tr>
 
             <td>
-                <select class="form-control articuloSelect">
+
+                <select
+                    class="form-control articuloSelect">
+
                     ${opciones}
+
                 </select>
+
             </td>
 
             <td>
-                <input type="number"
-                       class="form-control cantidad"
-                       min="1"
-                       value="1">
+
+                <input
+                    type="number"
+                    class="form-control cantidad"
+                    value="1"
+                    min="1">
+
             </td>
 
             <td>
-                <input type="number"
-                       class="form-control precio"
-                       readonly>
+
+                <input
+                    type="number"
+                    class="form-control precio"
+                    readonly>
+
             </td>
 
             <td>
+
                 <span class="subtotal">
+
                     0.00
+
                 </span>
+
             </td>
 
             <td>
-                <button type="button"
-                        class="btn btn-danger btnEliminar">
+
+                <button
+                    class="btn btn-danger btnEliminar"
+                    type="button">
 
                     X
 
                 </button>
+
             </td>
 
         </tr>
@@ -126,52 +315,77 @@ function agregarFilaArticulo() {
 
 }
 
+// =========================================
+// BOTON AGREGAR ARTICULO
+// =========================================
+
 $(document).on("click", ".btnAgregarArticulo", function () {
 
     if (articulosProveedor.length === 0) {
 
-        alert("Seleccione un proveedor primero");
+        Swal.fire({
+
+            icon: "warning",
+
+            title: "Proveedor requerido",
+
+            text: "Seleccione un proveedor primero."
+
+        });
 
         return;
+
     }
 
     agregarFilaArticulo();
 
 });
 
-// ==============================
+// =========================================
 // SELECCIONAR ARTICULO
-// ==============================
+// =========================================
 
 $(document).on("change", ".articuloSelect", function () {
 
-    let articuloSeleccionado = $(this).val();
+    const articulo = $(this).val();
 
     let repetido = false;
 
     $(".articuloSelect").not(this).each(function () {
 
-        if ($(this).val() == articuloSeleccionado) {
+        if ($(this).val() == articulo) {
 
             repetido = true;
+
         }
 
     });
 
     if (repetido) {
 
-        alert("Este artículo ya fue agregado");
+        Swal.fire({
+
+            icon: "warning",
+
+            title: "Artículo duplicado",
+
+            text: "Ese artículo ya fue agregado."
+
+        });
 
         $(this).val("");
 
         return;
+
     }
 
-    let fila = $(this).closest("tr");
+    const fila = $(this).closest("tr");
 
-    let precio = $(this)
+    const precio = $(this)
+
         .find(":selected")
-        .data("precio");
+
+        .data("precio") || 0;
 
     fila.find(".precio").val(precio);
 
@@ -179,25 +393,71 @@ $(document).on("change", ".articuloSelect", function () {
 
 });
 
+// =========================================
+// CAMBIO CANTIDAD
+// =========================================
+
+$(document).on("input", ".cantidad", function () {
+
+    calcularFila(
+
+        $(this).closest("tr")
+
+    );
+
+});
+
+// =========================================
+// ELIMINAR FILA
+// =========================================
+
+$(document).on("click", ".btnEliminar", function () {
+
+    $(this)
+
+        .closest("tr")
+
+        .remove();
+
+    calcularTotal();
+
+});
+
+// =========================================
+// CALCULAR FILA
+// =========================================
+
 function calcularFila(fila) {
 
-    let cantidad =
+    const cantidad =
+
         parseFloat(
+
             fila.find(".cantidad").val()
+
         ) || 0;
 
-    let precio =
+    const precio =
+
         parseFloat(
+
             fila.find(".precio").val()
+
         ) || 0;
 
-    let subtotal = cantidad * precio;
+    const subtotal = cantidad * precio;
 
     fila.find(".subtotal")
+
         .text(subtotal.toFixed(2));
 
     calcularTotal();
+
 }
+
+// =========================================
+// CALCULAR TOTAL
+// =========================================
 
 function calcularTotal() {
 
@@ -206,36 +466,24 @@ function calcularTotal() {
     $(".subtotal").each(function () {
 
         total +=
-            parseFloat($(this).text()) || 0;
+
+            parseFloat(
+
+                $(this).text()
+
+            ) || 0;
 
     });
 
     $("#totalCompra")
+
         .text(total.toFixed(2));
+
 }
 
-$(document).on(
-    "input",
-    ".cantidad",
-    function () {
-
-        let fila =
-            $(this).closest("tr");
-
-        calcularFila(fila);
-
-    }
-);
-
-$(document).on("click", ".btnEliminar", function () {
-
-    $(this)
-        .closest("tr")
-        .remove();
-
-    calcularTotal();
-
-});
+// =========================================
+// LIMPIAR MODAL
+// =========================================
 
 $('#modalCompra').on('hidden.bs.modal', function () {
 
@@ -245,71 +493,117 @@ $('#modalCompra').on('hidden.bs.modal', function () {
 
     $("#totalCompra").text("0.00");
 
+    $("#btnGuardarCompra")
+        .prop("disabled", false);
+
     articulosProveedor = [];
 
 });
 
-// ==============================
+// =========================================
 // GUARDAR COMPRA
-// ==============================
+// =========================================
 
 $("#btnGuardarCompra").click(function () {
 
-    let idProveedor = $("#proveedor").val();
+    const idProveedor = $("#proveedor").val();
 
     if (!idProveedor) {
 
-        alert("Seleccione un proveedor");
+        Swal.fire({
+            icon: "warning",
+            title: "Proveedor requerido",
+            text: "Seleccione un proveedor."
+        });
 
         return;
     }
+
+    let filaIncompleta = false;
+
 
     let detalles = [];
 
     $("#detalleCompra tr").each(function () {
 
-        let articulo =
-            $(this)
-                .find(".articuloSelect")
-                .val();
+        const articulo = $(this).find(".articuloSelect").val();
 
-        let cantidad =
-            $(this)
-                .find(".cantidad")
-                .val();
+        if (!articulo) {
 
-        let precio =
-            $(this)
-                .find(".precio")
-                .val();
+            filaIncompleta = true;
 
-        let subtotal =
-            parseFloat(cantidad) *
-            parseFloat(precio);
-
-        if (articulo) {
-
-            detalles.push({
-
-                idarticulo: parseInt(articulo),
-                cantidad: parseFloat(cantidad),
-                precio: parseFloat(precio),
-                subtotal: subtotal
-
-            });
+            return;
 
         }
 
+        const cantidad = parseFloat(
+            $(this).find(".cantidad").val()
+        );
+
+        const precio = parseFloat(
+            $(this).find(".precio").val()
+        );
+
+        if (isNaN(cantidad) || cantidad <= 0) {
+
+            Swal.fire({
+
+                icon: "warning",
+
+                title: "Cantidad inválida",
+
+                text: "La cantidad debe ser mayor que cero."
+
+            });
+
+            filaIncompleta = true;
+
+            return false;
+
+        }
+
+        detalles.push({
+
+            idarticulo: parseInt(articulo),
+
+            cantidad: cantidad,
+
+            precio: precio,
+
+            subtotal: cantidad * precio
+
+        });
+
     });
+
+    if (filaIncompleta) {
+
+        Swal.fire({
+
+            icon: "warning",
+
+            title: "Filas incompletas",
+
+            text: "Complete o elimine los artículos sin seleccionar."
+
+        });
+
+        return;
+
+    }
 
     if (detalles.length === 0) {
 
-        alert("Debe agregar al menos un artículo");
+        Swal.fire({
+            icon: "warning",
+            title: "Compra vacía",
+            text: "Debe agregar al menos un artículo."
+        });
 
         return;
     }
 
-    let compraVM = {
+    const compraVM = {
 
         compra: {
 
@@ -331,6 +625,8 @@ $("#btnGuardarCompra").click(function () {
 
 function guardarCompra(compraVM) {
 
+    $("#btnGuardarCompra").prop("disabled", true);
+
     $.ajax({
 
         url: "/Compra/Crear",
@@ -341,26 +637,57 @@ function guardarCompra(compraVM) {
 
         data: JSON.stringify(compraVM),
 
-        success: function (response) {
+        success: async function (response) {
 
-            if (response.success) {
+            if (!response.success) {
 
-                alert(response.message);
+                $("#btnGuardarCompra")
+                    .prop("disabled", false);
 
-                location.reload();
+                Swal.fire({
+
+                    icon: "error",
+
+                    title: "Error",
+
+                    text: response.message
+
+                });
+
+                return;
 
             }
-            else {
 
-                alert(response.message);
+            await Swal.fire({
 
-            }
+                icon: "success",
+
+                title: "Compra registrada",
+
+                text: response.message,
+
+                timer: 1800,
+
+                showConfirmButton: false
+
+            });
+
+            $("#modalCompra").modal("hide");
+
+            listarCompras();
 
         },
 
         error: function () {
 
-            alert("Error al guardar");
+            $("#btnGuardarCompra")
+                .prop("disabled", false);
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Ocurrió un error al guardar la compra."
+            });
 
         }
 
@@ -368,20 +695,22 @@ function guardarCompra(compraVM) {
 
 }
 
-// ==============================
-// VER DETALLE COMPRA
-// ==============================
+// =========================================
+// VER DETALLE
+// =========================================
 
 $(document).on("click", ".btnVerDetalle", function () {
 
-    let idCompra = $(this).data("id");
+    const idCompra = $(this).data("id");
 
     $("#detalleCompraModal").empty();
 
     $("#totalDetalleCompra").text("0.00");
 
     $.get(
+
         `/Compra/ObtenerDetalleCompra?idCompra=${idCompra}`,
+
         function (data) {
 
             let total = 0;
@@ -398,9 +727,9 @@ $(document).on("click", ".btnVerDetalle", function () {
 
                         <td>${d.cantidad}</td>
 
-                        <td>C$ ${d.precio}</td>
+                        <td>C$ ${Number(d.precio).toFixed(2)}</td>
 
-                        <td>C$ ${d.subtotal}</td>
+                        <td>C$ ${Number(d.subtotal).toFixed(2)}</td>
 
                     </tr>
 
@@ -408,82 +737,69 @@ $(document).on("click", ".btnVerDetalle", function () {
 
             });
 
-            $("#totalDetalleCompra").text(
-                total.toFixed(2)
-            );
+            $("#totalDetalleCompra")
+                .text(total.toFixed(2));
 
-            $("#modalDetalleCompra").modal("show");
+            $("#modalDetalleCompra")
+                .modal("show");
 
         }
+
     );
 
 });
 
-// ==============================
+// =========================================
 // FILTRAR COMPRAS
-// ==============================
+// =========================================
 
-$("#buscarId, #buscarProveedor, #buscarFecha")
-    .on("keyup change", function () {
+$("#buscarId, #buscarProveedor, #buscarFecha").on("input change", function () {
 
-        let idFiltro =
-            $("#buscarId").val().toLowerCase();
+    const idFiltro = $("#buscarId").val().trim();
 
-        let proveedorFiltro =
-            $("#buscarProveedor").val().toLowerCase();
+    const proveedorFiltro = $("#buscarProveedor").val().trim().toLowerCase();
 
-        let fechaFiltro =
-            $("#buscarFecha").val();
+    const fechaFiltro = $("#buscarFecha").val();
 
-        $(".compra-table tbody tr").each(function () {
+    const comprasFiltradas = listaCompras.filter(c => {
 
-            let id =
-                $(this)
-                    .find(".compra-id")
-                    .text()
-                    .trim()
-                    .toLowerCase();
+        // ID (exacto)
+        if (idFiltro !== "" && c.id.toString() !== idFiltro)
+            return false;
 
-            let proveedor =
-                $(this)
-                    .find(".proveedor")
-                    .text()
-                    .trim()
-                    .toLowerCase();
+        // Proveedor
+        if (
+            proveedorFiltro !== "" &&
+            !c.proveedor.toLowerCase().includes(proveedorFiltro)
+        )
+            return false;
 
-            let fecha =
-                $(this)
-                    .find(".fecha")
-                    .data("fecha");
+        // Fecha
+        if (
+            fechaFiltro !== "" &&
+            c.fechaBusqueda !== fechaFiltro
+        )
+            return false;
 
-            let mostrar = true;
-
-            // FILTRO ID
-
-            if (idFiltro !== "" &&
-                !id.includes(idFiltro)) {
-
-                mostrar = false;
-            }
-
-            // FILTRO PROVEEDOR
-
-            if (proveedorFiltro !== "" &&
-                !proveedor.includes(proveedorFiltro)) {
-
-                mostrar = false;
-            }
-
-            // FILTRO FECHA
-
-            if (fechaFiltro !== "" &&
-                fecha !== fechaFiltro) {
-
-                mostrar = false;
-            }
-
-            $(this).toggle(mostrar);
-
-        });
+        return true;
 
     });
+
+    renderCompras(comprasFiltradas);
+
+});
+
+$(document).on("input", ".cantidad", function () {
+
+    let cantidad = parseFloat($(this).val());
+
+    if (isNaN(cantidad) || cantidad < 1) {
+
+        $(this).val(1);
+
+    }
+
+    calcularFila($(this).closest("tr"));
+
+});
+

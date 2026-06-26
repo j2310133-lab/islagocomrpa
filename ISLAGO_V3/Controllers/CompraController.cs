@@ -1,9 +1,10 @@
-﻿using ISLAGO_V3.Datos.DBContext;
+﻿using ISLAGO_V3.Datos;
 using ISLAGO_V3.Entidad.Models;
 using ISLAGO_V3.Models.ViewModels;
 using ISLAGO_V3.Negocio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
 
 namespace ISLAGO_V3.Controllers
 {
@@ -25,6 +26,29 @@ namespace ISLAGO_V3.Controllers
             var compras = await _compraService.ObtenerTodas();
 
             return View(compras);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Listar()
+        {
+            var compras = await _compraService.ObtenerTodas();
+
+            var resultado = compras.Select(c => new
+            {
+                id = c.Id,
+
+                proveedor = c.IdproveedorNavigation != null
+                    ? c.IdproveedorNavigation.IdpersonaNavigation.Nombres
+                    : "Sin proveedor",
+
+                fecha = c.Fecha?.ToString("dd/MM/yyyy"),
+
+                fechaBusqueda = c.Fecha?.ToString("yyyy-MM-dd"),
+
+                total = c.Total
+            });
+
+            return Json(resultado);
         }
 
         [HttpGet]
@@ -101,6 +125,38 @@ namespace ISLAGO_V3.Controllers
                     success = false,
                     message = ex.Message
                 });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarPdf(int id)
+        {
+            try
+            {
+                var compra = await _context.Compras
+                    .Include(c => c.IdproveedorNavigation)
+                        .ThenInclude(p => p.IdpersonaNavigation)
+                    .FirstOrDefaultAsync(c => c.Id == id);
+
+                if (compra == null)
+                    return NotFound();
+
+                var detalles = await _context.DetalleCompras
+                    .Where(d => d.Idcompra == id)
+                    .Include(d => d.IdarticuloNavigation)
+                    .ToListAsync();
+
+                var documento = new Helpers.CompraPdf(compra, detalles);
+
+                var pdf = documento.GeneratePdf();
+
+                return File(pdf,
+                    "application/pdf",
+                    $"Compra_{compra.Id}.pdf");
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.ToString());
             }
         }
     }

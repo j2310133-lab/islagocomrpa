@@ -55,60 +55,30 @@
 
     <div class="table-responsive">
 
-        <table class="table table-hover compra-table">
+        <div class="table-responsive">
 
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Proveedor</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
+            <div class="tabla-compras-container">
 
-            <tbody>
+                <table class="table table-hover compra-table">
 
-                @foreach (var compra in Model)
-                {
-                    <tr>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Proveedor</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
 
-                        <td class="compra-id">
-                            @compra.Id
-                        </td>
+                    <tbody id="tablaCompras">
+                    </tbody>
 
-                        <td class="proveedor">
-                            @(compra.IdproveedorNavigation != null
-                                                    ? compra.IdproveedorNavigation.IdpersonaNavigation.Nombres
-                                                    : "Sin proveedor")
-                    </td>
+                </table>
 
-                        <td class="fecha"
-                            data-fecha="@compra.Fecha?.ToString("yyyy-MM-dd")">
+            </div>
 
-                            @(compra.Fecha?.ToString("dd/MM/yyyy"))
-
-                        </td>
-
-                        <td>
-                            @compra.Total
-                        </td>
-
-                        <td>
-                            <button class="btn btn-info btnVerDetalle"
-                                    data-id="@compra.Id">
-
-                                Ver
-
-                            </button>
-                        </td>
-
-                    </tr>
-                 }
-
-            </tbody>
-
-        </table>
+        </div>
 
     </div>
 
